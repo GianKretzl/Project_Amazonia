@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sala de Entrevistas - Encruzilhada</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  <body>
+    <h1>Sala de Entrevistas</h1>
+    <div id="entities"></div>
+    <div id="excalibur-container" style="width:100%; max-width:900px; height:160px; margin:12px 0; border:1px solid #ddd;
+         border-radius:6px; background:#f3fff4; display:flex; align-items:center; justify-content:center;">
+      <!-- Canvas Excalibur será inserido aqui pelo script -->
+    </div>
+
+    <div id="chat-area" style="display:none">
+      <h2 id="entity-name"></h2>
+      <div id="chat-log"></div>
+      <form id="chat-form">
+        <input id="chat-input" autocomplete="off" placeholder="Faça uma pergunta..." style="width:70%">
+        <button type="submit">Enviar</button>
+      </form>
+    </div>
+
+  <script src="https://unpkg.com/excalibur/dist/excalibur.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

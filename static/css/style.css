@@ -1,0 +1,6 @@
+body { font-family: Arial, sans-serif; margin: 16px; }
+.entity-card { display:inline-block; border:1px solid #ccc; padding:10px; margin:6px; cursor:pointer; border-radius:6px; }
+.entity-card.locked { opacity:0.5; cursor:default }
+.lock { color: #b00 }
+#chat-log { border:1px solid #ddd; padding:10px; height:300px; overflow:auto; background:#fafafa }
+button { padding:6px 10px; }
