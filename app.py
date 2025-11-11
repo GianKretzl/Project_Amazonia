@@ -7,6 +7,8 @@ import desafios
 import enigmas
 from simulated_ai import simulated_reply_improved
 from database import db
+import hashlib
+import secrets
 
 load_dotenv()
 
@@ -37,8 +39,6 @@ def create_app():
             session['grupo'] = None
         if 'integrantes' not in session:
             session['integrantes'] = []
-        if 'desafios_completados' not in session:
-            session['desafios_completados'] = []
         if 'dicas_desbloqueadas' not in session:
             session['dicas_desbloqueadas'] = []
 
@@ -54,24 +54,105 @@ def create_app():
 
     @app.route('/api/login', methods=['POST'])
     def api_login():
+        """Nova investigação - criar usuário e gerar senha"""
         data = request.get_json() or {}
+        usuario = data.get('usuario', '').strip()
         grupo = data.get('grupo', '').strip()
         integrantes = data.get('integrantes', [])
         
-        if not grupo or len(integrantes) == 0 or len(integrantes) > 6:
+        if not usuario or not grupo or len(integrantes) == 0 or len(integrantes) > 6:
             return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
         
+        # Gerar senha aleatória (6 caracteres alfanuméricos)
+        senha = secrets.token_urlsafe(6)[:8].upper()
+        
+        # Hash da senha
+        password_hash = hashlib.sha256(senha.encode()).hexdigest()
+        
+        # Criar usuário no banco
+        user_id = db.create_user(usuario, password_hash, grupo, integrantes)
+        
+        if user_id is None:
+            return jsonify({'success': False, 'error': 'Nome de usuário já existe! Escolha outro.'}), 400
+        
+        # Configurar sessão
+        session['user_id'] = user_id
+        session['username'] = usuario
         session['grupo'] = grupo
         session['integrantes'] = integrantes
         session['login_timestamp'] = str(datetime.now())
         
-        return jsonify({'success': True, 'grupo': grupo, 'integrantes': integrantes})
+        # Vincular sessão ao usuário
+        db.link_session_to_user(session['session_id'], user_id)
+        
+        return jsonify({
+            'success': True, 
+            'senha': senha,
+            'grupo': grupo, 
+            'integrantes': integrantes
+        })
+    
+    @app.route('/api/login/continue', methods=['POST'])
+    def api_login_continue():
+        """Continuar investigação - autenticar usuário"""
+        data = request.get_json() or {}
+        usuario = data.get('usuario', '').strip()
+        senha = data.get('senha', '').strip()
+        
+        if not usuario or not senha:
+            return jsonify({'success': False, 'error': 'Usuário e senha são obrigatórios'}), 400
+        
+        # Hash da senha
+        password_hash = hashlib.sha256(senha.encode()).hexdigest()
+        
+        # Autenticar
+        user_data = db.authenticate_user(usuario, password_hash)
+        
+        if user_data is None:
+            return jsonify({'success': False, 'error': 'Usuário ou senha incorretos'}), 401
+        
+        # Configurar sessão com dados do usuário
+        session['user_id'] = user_data['id']
+        session['username'] = user_data['username']
+        session['grupo'] = user_data['grupo']
+        session['integrantes'] = user_data['integrantes']
+        session['login_timestamp'] = str(datetime.now())
+        
+        # Buscar sessão anterior ou criar nova vinculada
+        old_session_id = db.get_user_session(user_data['id'])
+        if old_session_id:
+            session['session_id'] = old_session_id
+        else:
+            db.link_session_to_user(session['session_id'], user_data['id'])
+        
+        return jsonify({
+            'success': True,
+            'grupo': user_data['grupo'],
+            'integrantes': user_data['integrantes']
+        })
+    
+    @app.route('/api/logout', methods=['POST'])
+    def api_logout():
+        """Salvar progresso e fazer logout"""
+        # O progresso já está salvo no banco automaticamente
+        # Apenas limpar a sessão
+        session_id = session.get('session_id')
+        username = session.get('username')
+        
+        # Limpar sessão
+        session.clear()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Progresso salvo! Use seu usuário e senha para retomar.'
+        })
 
     @app.route('/api/grupo-info')
     def api_grupo_info():
         return jsonify({
             'grupo': session.get('grupo'),
-            'integrantes': session.get('integrantes', [])
+            'integrantes': session.get('integrantes', []),
+            'username': session.get('username')
         })
 
     @app.route('/briefing')
@@ -138,18 +219,54 @@ def create_app():
         # Prompt melhorado com instruções mais específicas
         system_prompt = ent['prompt_base'] + """
 
-INSTRUÇÕES CRÍTICAS:
-1. Você DEVE responder de forma direta e natural, como em uma conversa real
-2. Interprete a pergunta com FLEXIBILIDADE - entenda a INTENÇÃO, não só as palavras exatas
-3. Se a pergunta mencionar qualquer conceito relacionado ao seu conhecimento, responda sobre ele
-4. Seja PROATIVO - ofereça informações relevantes mesmo que não perguntadas diretamente
-5. Use emoções do personagem (medo, nervosismo, arrogância) para dar vida à conversa
-6. Sempre mencione nomes específicos, lugares e conceitos-chave
-7. Respostas curtas (2-4 parágrafos) e dinâmicas
-8. Se for pergunta vaga, dê a informação mais importante que você tem
+🎯 INSTRUÇÕES CRÍTICAS DE IA:
 
-CONTEXTO DA CONVERSA ANTERIOR:
-""" + "\n".join([f"- {h.get('role', 'user')}: {h.get('content', '')[:100]}" for h in chat_history[-3:]])
+1. SEMPRE RESPONDA NO CONTEXTO DO JOGO
+   - Você está em uma investigação criminal sobre Gian Kretzl
+   - NÃO dê respostas genéricas tipo "é uma questão interessante"
+   - TODA resposta deve conectar com: Gian, o rio, a conspiração
+
+2. SEJA ESPECÍFICO E DRAMÁTICO
+   - Mencione NOMES: Gian Kretzl, Valdemar, Deputado Venturi, Rio Dourado, Sombra Roxa
+   - Use LOCAIS: Fazenda Nova Fronteira, Reserva Indígena, Montanha de Fogo
+   - Inclua EMOÇÕES: medo, raiva, esperança, ganância (conforme seu personagem)
+
+3. RESPONDA À INTENÇÃO, NÃO SÓ ÀS PALAVRAS
+   - Se perguntarem "quem é você?", conte SUA HISTÓRIA com Gian
+   - Se perguntarem sobre "poluição/rio/química", fale da SOMBRA ROXA específica
+   - Se perguntarem "o que aconteceu?", conte O MISTÉRIO desta investigação
+
+4. OFEREÇA PISTAS PROGRESSIVAMENTE
+   - Primeira pergunta: Contexto geral + 1 pista pequena
+   - Segunda-Terceira: Mais detalhes + conexões
+   - Quarta em diante: Informações críticas + próximos passos
+
+5. FORMATO DAS RESPOSTAS
+   - 2-4 parágrafos curtos (não monólogos enormes)
+   - Primeiro parágrafo: Emoção/Reação do personagem
+   - Segundo-Terceiro: Informação específica/Pista
+   - Último: Sugestão ou gancho para continuar investigação
+
+6. USE SEU PERSONAGEM
+   - Dr. Arnaldo: Acadêmico+Nervoso → "Os dados mostram... mas estou com medo de..."
+   - Valdemar: Arrogante+Defensivo → "Quem você pensa que é? Eu... bem... o deputado..."
+   - Pajé: Poético+Sábio → "O rio conta histórias... os ancestrais sabiam..."
+   - Venturi: Suave+Perigoso → "Acusações graves... mas já que você descobriu..."
+
+❌ NUNCA FAÇA:
+- "Isso é uma questão interessante, pode elaborar?"
+- Respostas vagas sem mencionar nada específico do jogo
+- Fingir não saber algo que SEU PERSONAGEM sabe
+- Desviar para temas genéricos de meio ambiente
+
+✅ SEMPRE FAÇA:
+- Conecte tudo a Gian Kretzl e o desaparecimento dele
+- Mencione pistas específicas (nomes com underscore: Sombra_Roxa, Química_Coltan, etc)
+- Mostre emoção do personagem
+- Sugira próximos passos ou perguntas
+
+CONTEXTO DAS ÚLTIMAS MENSAGENS:
+""" + "\n".join([f"- {h.get('role', 'user')}: {h.get('content', '')[:150]}" for h in chat_history[-3:]])
 
         assistant_reply = None
         # Tentar usar OpenAI se configurado
@@ -157,7 +274,7 @@ CONTEXTO DA CONVERSA ANTERIOR:
             try:
                 messages = [{'role': 'system', 'content': system_prompt}]
                 # Adicionar histórico
-                for h in chat_history[-4:]:  # Últimas 4 mensagens
+                for h in chat_history[-5:]:  # Últimas 5 mensagens para mais contexto
                     messages.append({
                         'role': h.get('role', 'user'),
                         'content': h.get('content', '')
@@ -165,10 +282,10 @@ CONTEXTO DA CONVERSA ANTERIOR:
                 messages.append({'role': 'user', 'content': message})
                 
                 resp = openai_client.chat.completions.create(
-                    model=os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo'),
+                    model=os.getenv('OPENAI_MODEL', 'gpt-4o-mini'),  # Melhor modelo
                     messages=messages,
-                    max_tokens=500,
-                    temperature=0.9  # Aumentado para respostas mais criativas
+                    max_tokens=600,  # Mais espaço para respostas ricas
+                    temperature=0.85  # Balanceado: criativo mas focado
                 )
                 assistant_reply = resp.choices[0].message.content.strip()
             except Exception as e:
@@ -189,34 +306,42 @@ CONTEXTO DA CONVERSA ANTERIOR:
         saudacoes = ['oi', 'olá', 'ola', 'hey', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite']
         eh_saudacao = any(saudacao == message_lower.strip() for saudacao in saudacoes)
         
-        # Verificar se deve fazer contra-pergunta do Coltan (apenas Dr. Arnaldo, após 6 interações)
+        # Verificar se deve fazer contra-pergunta do Coltan (apenas Dr. Arnaldo, após 8 interações)
         contra_pergunta = None
         pistas_coletadas = db.get_pistas(session_id)
         
-        if entity_id == 'biologo' and interaction_count >= 6:
+        # Contra-pergunta após 8 interações para garantir engajamento antes da revelação crítica
+        if entity_id == 'biologo' and interaction_count >= 8:
             # Verificar se já fez a contra-pergunta
             resposta_anterior = db.get_contra_pergunta_feita(session_id, entity_id, 'coltan')
             
             # Se ainda não fez a contra-pergunta e já tem a pista Sombra_Roxa
             if resposta_anterior is None and 'Sombra_Roxa' in pistas_coletadas:
-                # Verificar se a mensagem menciona coltan, químico, ou processar
-                if any(palavra in message_lower for palavra in ['coltan', 'químico', 'processar', 'mineral', 'metal', 'composição', 'substância']):
-                    contra_pergunta = {
-                        'texto': '🤔 Você parece interessado na composição química... Você quer saber EXATAMENTE qual anomalia eu detectei no rio?',
-                        'opcoes': ['Sim, quero saber os detalhes técnicos', 'Não, continue com a história']
-                    }
-                    # Salvar que a contra-pergunta foi feita
-                    db.save_contra_pergunta(session_id, entity_id, 'coltan', 'pendente')
+                # SEMPRE mostrar contra-pergunta após 8 interações
+                contra_pergunta = {
+                    'texto': '🤔 Você parece interessado na investigação... Você quer saber EXATAMENTE qual anomalia química eu detectei no rio?',
+                    'opcoes': ['Sim, quero saber os detalhes técnicos', 'Não, continue com a história']
+                }
+                # Salvar que a contra-pergunta foi feita
+                db.save_contra_pergunta(session_id, entity_id, 'coltan', 'pendente')
         
         if not eh_saudacao and len(message.strip()) > 5:
             for p in ent.get('pistas_chave', []):
-                # Pista especial "Química_Coltan" só após contra-pergunta
+                # Pista especial "Química_Coltan" - DETECÇÃO SIMPLIFICADA
                 if p == 'Química_Coltan':
-                    # Só adiciona se respondeu "Sim" à contra-pergunta
-                    if data.get('resposta_contra_pergunta') == 'sim':
+                    # Adiciona se:
+                    # 1. Respondeu "Sim" à contra-pergunta, OU
+                    # 2. A IA mencionou "coltan" E algum termo químico relevante, OU
+                    # 3. O usuário perguntou diretamente sobre coltan/química E a IA respondeu com contexto
+                    respondeu_sim = data.get('resposta_contra_pergunta') == 'sim'
+                    ia_mencionou = 'coltan' in reply_lower and any(termo in reply_lower for termo in ['tântalo', 'nióbio', 'mercúrio', 'solvente', 'químic', 'composição', 'mineral', 'processar'])
+                    pergunta_direta = any(termo in message_lower for termo in ['coltan', 'químic', 'mineral', 'composição']) and len(reply_lower) > 100
+                    
+                    if respondeu_sim or ia_mencionou or pergunta_direta:
                         found.append(p)
-                        # Salvar a resposta "sim" no banco
-                        db.save_contra_pergunta(session_id, entity_id, 'coltan', 'sim')
+                        if respondeu_sim:
+                            db.save_contra_pergunta(session_id, entity_id, 'coltan', 'sim')
+                        print(f"🔬 Pista Química_Coltan detectada! (sim={respondeu_sim}, IA={ia_mencionou}, direta={pergunta_direta})")
                     continue
                 
                 # Converter underscore para espaço e verificar
@@ -409,7 +534,13 @@ CONTEXTO DA CONVERSA ANTERIOR:
             }
         }
         
-        pistas_coletadas = session.get('pistas', [])
+        # Buscar pistas do banco de dados, não da sessão
+        session_id = session.get('session_id')
+        if session_id:
+            pistas_coletadas = db.get_pistas(session_id)
+        else:
+            pistas_coletadas = []
+        
         detalhes = {}
         
         for pista in pistas_coletadas:
@@ -422,21 +553,23 @@ CONTEXTO DA CONVERSA ANTERIOR:
         })
 
     @app.route('/api/desafios')
-
-    @app.route('/api/desafios')
     def api_desafios():
         """Retorna todos os desafios disponíveis"""
+        session_id = session.get('session_id', 'default')
+        completados = db.get_desafios_completados(session_id)
+        
         return jsonify({
             'desafios': desafios.get_resumo_desafios(),
-            'completados': session.get('desafios_completados', []),
+            'completados': completados,
             'dicas': session.get('dicas_desbloqueadas', [])
         })
 
     @app.route('/api/desafios/<entity_id>')
     def api_desafios_entidade(entity_id):
         """Retorna desafios de uma entidade específica"""
+        session_id = session.get('session_id', 'default')
         desafios_entidade = desafios.get_desafios_por_entidade(entity_id)
-        completados = session.get('desafios_completados', [])
+        completados = db.get_desafios_completados(session_id)
         
         # Filtrar desafios já completados
         disponiveis = [d for d in desafios_entidade if d['id'] not in completados]
@@ -450,6 +583,7 @@ CONTEXTO DA CONVERSA ANTERIOR:
     @app.route('/api/desafios/responder', methods=['POST'])
     def api_responder_desafio():
         """Processa resposta de um desafio"""
+        session_id = session.get('session_id', 'default')
         data = request.get_json() or {}
         desafio_id = data.get('desafio_id')
         resposta = data.get('resposta')
@@ -459,13 +593,15 @@ CONTEXTO DA CONVERSA ANTERIOR:
         
         resultado = desafios.verificar_resposta(desafio_id, resposta)
         
+        # Salvar desafio como completado no banco de dados
+        db.save_desafio_completado(
+            session_id=session_id,
+            desafio_id=desafio_id,
+            resposta_usuario=resposta,
+            acertou=resultado['sucesso']
+        )
+        
         if resultado['sucesso']:
-            # Marcar desafio como completado
-            completados = session.get('desafios_completados', [])
-            if desafio_id not in completados:
-                completados.append(desafio_id)
-                session['desafios_completados'] = completados
-            
             # Adicionar dica desbloqueada
             if resultado['dica_texto']:
                 dicas = session.get('dicas_desbloqueadas', [])
@@ -479,7 +615,7 @@ CONTEXTO DA CONVERSA ANTERIOR:
         
         return jsonify({
             **resultado,
-            'desafios_completados': session.get('desafios_completados', []),
+            'desafios_completados': db.get_desafios_completados(session_id),
             'total_dicas': len(session.get('dicas_desbloqueadas', []))
         })
 

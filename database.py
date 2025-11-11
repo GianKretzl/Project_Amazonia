@@ -24,13 +24,28 @@ class GameDatabase:
         conn = self.get_connection()
         cursor = conn.cursor()
         
+        # Tabela de usuários (para autenticação)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                grupo_nome TEXT NOT NULL,
+                integrantes TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
         # Tabela de jogadores/sessões
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS players (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT UNIQUE NOT NULL,
+                user_id INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES usuarios(id)
             )
         ''')
         
@@ -106,20 +121,125 @@ class GameDatabase:
             )
         ''')
         
+        # Tabela de desafios completados
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS desafios_completados (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                desafio_id TEXT NOT NULL,
+                resposta_usuario TEXT,
+                acertou BOOLEAN NOT NULL,
+                completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES players(session_id),
+                UNIQUE(session_id, desafio_id)
+            )
+        ''')
+        
         conn.commit()
         conn.close()
     
     # ========== GERENCIAMENTO DE JOGADORES ==========
     
-    def ensure_player(self, session_id: str):
+    def create_user(self, username: str, password_hash: str, grupo_nome: str, integrantes: list) -> Optional[int]:
+        """Criar novo usuário e retornar ID"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            integrantes_json = json.dumps(integrantes)
+            cursor.execute('''
+                INSERT INTO usuarios (username, password_hash, grupo_nome, integrantes, created_at, last_login)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ''', (username, password_hash, grupo_nome, integrantes_json))
+            
+            user_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            return user_id
+        except sqlite3.IntegrityError:
+            conn.close()
+            return None  # Usuário já existe
+    
+    def authenticate_user(self, username: str, password_hash: str) -> Optional[Dict]:
+        """Autenticar usuário e retornar dados"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, username, grupo_nome, integrantes, created_at
+            FROM usuarios
+            WHERE username = ? AND password_hash = ?
+        ''', (username, password_hash))
+        
+        row = cursor.fetchone()
+        
+        if row:
+            # Atualizar last_login
+            cursor.execute('''
+                UPDATE usuarios SET last_login = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (row['id'],))
+            conn.commit()
+            
+            user_data = {
+                'id': row['id'],
+                'username': row['username'],
+                'grupo': row['grupo_nome'],
+                'integrantes': json.loads(row['integrantes']),
+                'created_at': row['created_at']
+            }
+            conn.close()
+            return user_data
+        
+        conn.close()
+        return None
+    
+    def link_session_to_user(self, session_id: str, user_id: int):
+        """Vincular sessão a um usuário"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Garantir que a sessão existe antes de atualizar
+        cursor.execute('''
+            INSERT OR IGNORE INTO players (session_id, user_id, created_at, last_activity)
+            VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ''', (session_id, user_id))
+        
+        # Atualizar user_id se a sessão já existia
+        cursor.execute('''
+            UPDATE players SET user_id = ?, last_activity = CURRENT_TIMESTAMP
+            WHERE session_id = ?
+        ''', (user_id, session_id))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_user_session(self, user_id: int) -> Optional[str]:
+        """Buscar session_id mais recente de um usuário"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT session_id FROM players
+            WHERE user_id = ?
+            ORDER BY last_activity DESC
+            LIMIT 1
+        ''', (user_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        return row['session_id'] if row else None
+    
+    def ensure_player(self, session_id: str, user_id: int = None):
         """Garantir que o jogador existe no banco"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
         cursor.execute('''
-            INSERT OR IGNORE INTO players (session_id, created_at, last_activity)
-            VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        ''', (session_id,))
+            INSERT OR IGNORE INTO players (session_id, user_id, created_at, last_activity)
+            VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ''', (session_id, user_id))
         
         cursor.execute('''
             UPDATE players SET last_activity = CURRENT_TIMESTAMP
@@ -331,6 +451,77 @@ class GameDatabase:
         
         return row['resposta'] if row else None
     
+    # ========== DESAFIOS COMPLETADOS ==========
+    
+    def save_desafio_completado(self, session_id: str, desafio_id: str, resposta_usuario: str, acertou: bool):
+        """Salvar desafio completado (correto ou incorreto)"""
+        self.ensure_player(session_id)
+        
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT OR REPLACE INTO desafios_completados 
+            (session_id, desafio_id, resposta_usuario, acertou, completed_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (session_id, desafio_id, resposta_usuario, acertou))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_desafios_completados(self, session_id: str) -> List[str]:
+        """Recuperar IDs dos desafios já completados (corretos ou incorretos)"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT desafio_id FROM desafios_completados
+            WHERE session_id = ?
+        ''', (session_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [r['desafio_id'] for r in rows]
+    
+    def get_desafios_acertados(self, session_id: str) -> List[str]:
+        """Recuperar IDs dos desafios acertados"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT desafio_id FROM desafios_completados
+            WHERE session_id = ? AND acertou = 1
+        ''', (session_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [r['desafio_id'] for r in rows]
+    
+    def get_desafio_status(self, session_id: str, desafio_id: str) -> Optional[Dict]:
+        """Verificar status de um desafio específico"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT desafio_id, resposta_usuario, acertou, completed_at
+            FROM desafios_completados
+            WHERE session_id = ? AND desafio_id = ?
+        ''', (session_id, desafio_id))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                'desafio_id': row['desafio_id'],
+                'resposta_usuario': row['resposta_usuario'],
+                'acertou': bool(row['acertou']),
+                'completed_at': row['completed_at']
+            }
+        return None
+    
     # ========== LIMPEZA E RESET ==========
     
     def reset_player_progress(self, session_id: str):
@@ -343,6 +534,7 @@ class GameDatabase:
         cursor.execute('DELETE FROM enigmas_resolvidos WHERE session_id = ?', (session_id,))
         cursor.execute('DELETE FROM entity_interactions WHERE session_id = ?', (session_id,))
         cursor.execute('DELETE FROM contra_perguntas WHERE session_id = ?', (session_id,))
+        cursor.execute('DELETE FROM desafios_completados WHERE session_id = ?', (session_id,))
         
         conn.commit()
         conn.close()

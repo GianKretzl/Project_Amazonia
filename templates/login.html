@@ -15,14 +15,44 @@
         <p class="login-subtitle">Sistema de Investigação Classificado</p>
       </div>
 
-      <!-- Formulário de Login -->
-      <div class="login-card">
+      <!-- Abas de Seleção -->
+      <div class="login-tabs">
+        <button class="tab-button active" onclick="switchTab('nova')">
+          🆕 Nova Investigação
+        </button>
+        <button class="tab-button" onclick="switchTab('continuar')">
+          ▶️ Continuar Investigação
+        </button>
+      </div>
+
+      <!-- NOVA INVESTIGAÇÃO -->
+      <div class="login-card" id="tab-nova">
         <div class="card-header">
-          <h2>🔐 ACESSO AO SISTEMA</h2>
+          <h2>🔐 NOVA INVESTIGAÇÃO</h2>
           <p class="access-info">Identifique seu grupo de investigação</p>
         </div>
 
         <form id="login-form" class="login-form">
+          <!-- Nome de Usuário -->
+          <div class="form-group">
+            <label for="usuario-nome">
+              <span class="label-icon">👤</span>
+              <span class="label-text">Nome de Usuário</span>
+            </label>
+            <input 
+              type="text" 
+              id="usuario-nome" 
+              name="usuario-nome" 
+              class="form-input"
+              placeholder="Ex: investigador_amazonas"
+              required
+              maxlength="30"
+              pattern="[a-zA-Z0-9_]+"
+              title="Apenas letras, números e underscore"
+            >
+            <p class="helper-text">⚠️ Anote seu usuário! Será necessário para retomar.</p>
+          </div>
+
           <!-- Nome do Grupo -->
           <div class="form-group">
             <label for="grupo-nome">
@@ -76,7 +106,60 @@
 
         <!-- Informação de Sessão -->
         <div class="session-info">
-          <p>💾 Seus dados serão salvos durante esta sessão</p>
+          <p>💾 Seu progresso será salvo automaticamente</p>
+        </div>
+      </div>
+
+      <!-- CONTINUAR INVESTIGAÇÃO -->
+      <div class="login-card" id="tab-continuar" style="display: none;">
+        <div class="card-header">
+          <h2>▶️ RETOMAR INVESTIGAÇÃO</h2>
+          <p class="access-info">Entre com suas credenciais</p>
+        </div>
+
+        <form id="continue-form" class="login-form">
+          <!-- Nome de Usuário -->
+          <div class="form-group">
+            <label for="continue-usuario">
+              <span class="label-icon">👤</span>
+              <span class="label-text">Nome de Usuário</span>
+            </label>
+            <input 
+              type="text" 
+              id="continue-usuario" 
+              name="continue-usuario" 
+              class="form-input"
+              placeholder="Seu nome de usuário"
+              required
+            >
+          </div>
+
+          <!-- Senha -->
+          <div class="form-group">
+            <label for="continue-senha">
+              <span class="label-icon">🔑</span>
+              <span class="label-text">Senha de Acesso</span>
+            </label>
+            <input 
+              type="password" 
+              id="continue-senha" 
+              name="continue-senha" 
+              class="form-input"
+              placeholder="Senha gerada no início"
+              required
+            >
+          </div>
+
+          <!-- Botão de Submit -->
+          <button type="submit" class="btn-submit">
+            <span class="btn-icon">🔓</span>
+            <span class="btn-text">ACESSAR INVESTIGAÇÃO</span>
+          </button>
+        </form>
+
+        <!-- Informação -->
+        <div class="session-info">
+          <p>❓ Esqueceu a senha? Não é possível recuperar - inicie nova investigação.</p>
         </div>
       </div>
 
@@ -87,6 +170,25 @@
     </div>
 
     <script>
+      // Gerenciamento de abas
+      function switchTab(tab) {
+        const tabs = document.querySelectorAll('.tab-button');
+        const tabNova = document.getElementById('tab-nova');
+        const tabContinuar = document.getElementById('tab-continuar');
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        if (tab === 'nova') {
+          event.target.classList.add('active');
+          tabNova.style.display = 'block';
+          tabContinuar.style.display = 'none';
+        } else {
+          event.target.classList.add('active');
+          tabNova.style.display = 'none';
+          tabContinuar.style.display = 'block';
+        }
+      }
+
       // Gerenciamento de integrantes
       let integranteCount = 1;
       const maxIntegrantes = 6;
@@ -139,10 +241,11 @@
         });
       }
 
-      // Submit do formulário
+      // Submit do formulário - NOVA INVESTIGAÇÃO
       document.getElementById('login-form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
+        const usuarioNome = document.getElementById('usuario-nome').value.trim();
         const grupoNome = document.getElementById('grupo-nome').value.trim();
         const integranteInputs = document.querySelectorAll('input[name="integrante[]"]');
         const integrantes = Array.from(integranteInputs)
@@ -162,6 +265,7 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+              usuario: usuarioNome,
               grupo: grupoNome,
               integrantes: integrantes
             })
@@ -170,10 +274,10 @@
           const data = await response.json();
 
           if (data.success) {
-            // Redirecionar para a página inicial com efeito de loading
-            showLoadingAndRedirect();
+            // Mostrar tela de loading com senha
+            showLoadingWithPassword(data.senha);
           } else {
-            alert('Erro ao fazer login. Tente novamente.');
+            alert(data.error || 'Erro ao fazer login. Tente novamente.');
           }
         } catch (error) {
           console.error('Erro:', error);
@@ -181,9 +285,84 @@
         }
       });
 
-      function showLoadingAndRedirect() {
-        const form = document.querySelector('.login-card');
+      // Submit do formulário - CONTINUAR INVESTIGAÇÃO
+      document.getElementById('continue-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const usuario = document.getElementById('continue-usuario').value.trim();
+        const senha = document.getElementById('continue-senha').value.trim();
+
+        try {
+          const response = await fetch('/api/login/continue', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              usuario: usuario,
+              senha: senha
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Redirecionar direto para o jogo
+            showLoadingAndRedirect();
+          } else {
+            alert(data.error || 'Usuário ou senha incorretos!');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro de conexão. Tente novamente.');
+        }
+      });
+
+      function showLoadingWithPassword(senha) {
+        const form = document.querySelector('#tab-nova');
         form.innerHTML = `
+          <div class="loading-screen">
+            <div class="loading-spinner"></div>
+            <h2>🔐 Gerando Credenciais de Acesso</h2>
+            
+            <div class="password-box">
+              <h3>⚠️ ANOTE SUA SENHA:</h3>
+              <div class="password-display">
+                <code>${senha}</code>
+                <button onclick="copyPassword('${senha}')" class="btn-copy">📋 Copiar</button>
+              </div>
+              <p class="password-warning">
+                ⚠️ Esta senha será necessária para retomar sua investigação!<br>
+                ⚠️ Não será possível recuperar se perdida!
+              </p>
+            </div>
+
+            <div class="loading-bar">
+              <div class="loading-progress"></div>
+            </div>
+            <p class="loading-text">Carregando arquivos confidenciais de Gian Kretzl...</p>
+            
+            <button onclick="acknowledgePassword()" class="btn-submit btn-acknowledge">
+              ✅ JÁ ANOTEI A SENHA - CONTINUAR
+            </button>
+          </div>
+        `;
+      }
+
+      function copyPassword(senha) {
+        navigator.clipboard.writeText(senha);
+        alert('✅ Senha copiada para a área de transferência!');
+      }
+
+      function acknowledgePassword() {
+        showLoadingAndRedirect();
+      }
+
+      function showLoadingAndRedirect() {
+        const activeTab = document.querySelector('.login-card[style="display: block;"], #tab-nova');
+        if (!activeTab) return;
+        
+        activeTab.innerHTML = `
           <div class="loading-screen">
             <div class="loading-spinner"></div>
             <h2>Acessando sistema de Gian Kretzl...</h2>

@@ -39,7 +39,7 @@ ENIGMAS = {
         'resposta_correta': 'B',
         'explicacao': 'Exatamente! A fazenda serve como ponto de apoio legal na região. Ter uma propriedade registrada próxima facilita o acesso, cria presença institucional e permite operações secretas na terra indígena vizinha.',
         'recompensa_entidade': 'lider_indigena',
-        'requer_pistas': ['Fazenda_Fachada', 'Interesse_na_Reserva']
+        'requer_pistas': ['Fazenda_Fachada_Logística', 'Conflito_Reserva_Indígena']
     },
     
     # Enigma para desbloquear Deputado Venturi (após coletar pistas do Pajé)
@@ -58,7 +58,7 @@ ENIGMAS = {
         'resposta_correta': 'C',
         'explicacao': 'Perfeito! Apenas um político com poder em Brasília teria capacidade de: aprovar documentação fraudulenta, bloquear fiscalizações, influenciar demarcações de terra e coordenar uma operação tão complexa. O Deputado Venturi está por trás de tudo!',
         'recompensa_entidade': 'politico',
-        'requer_pistas': ['Mapa_Coltan', 'Deputado_Venturi']
+        'requer_pistas': ['Trilha_Ancestrais_Mapa_Coltan', 'Homem_Terno_Venturi']
     }
 }
 

@@ -389,6 +389,13 @@ class InterviewSystem {
     // Mostrar sugestões de perguntas
     this.showQuestionSuggestions(entity);
     
+    // VERIFICAR se deve mostrar contra-pergunta do Coltan (Dr. Arnaldo com >3 interações)
+    if (entity.id === 'biologo' && this.chatHistory.length >= 6) {
+      // 6 mensagens = 3 interações (pergunta + resposta)
+      console.log('🔔 Dr. Arnaldo tem mais de 3 interações - verificando contra-pergunta...');
+      await this.verificarContraPerguntaColtan();
+    }
+    
     if (this.chatArea) {
       this.chatArea.style.display = 'block';
       this.chatArea.scrollIntoView({ behavior: 'smooth' });
@@ -830,6 +837,32 @@ class InterviewSystem {
     }
   }
   
+  async verificarContraPerguntaColtan() {
+    // Fazer uma pergunta "dummy" para triggerar a contra-pergunta
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_id: this.currentEntity.id,
+          message: '.' // Mensagem mínima apenas para triggerar verificação
+        })
+      });
+      
+      const data = await res.json();
+      
+      // Se retornou contra-pergunta, mostrar
+      if (data.contra_pergunta) {
+        console.log('✅ Contra-pergunta detectada! Mostrando agora...');
+        this.mostrarContraPergunta(data.contra_pergunta);
+      } else {
+        console.log('❌ Contra-pergunta não retornada - pode já ter sido respondida');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar contra-pergunta:', error);
+    }
+  }
+  
   mostrarContraPergunta(contraPergunta) {
     // Tocar som de alerta
     soundManager.play('alerta');
@@ -864,7 +897,7 @@ class InterviewSystem {
         div.querySelectorAll('.btn-contra-resposta').forEach(b => b.disabled = true);
         
         if (resposta === 'sim') {
-          // Enviar mensagem especial para obter a pista Anomalia_Química_Coltan
+          // Enviar mensagem especial para obter a pista Química_Coltan
           await this.responderContraPergunta('Sim, quero saber os detalhes técnicos da anomalia');
         } else {
           this.appendSystemMessage('Dr. Arnaldo suspira e continua a conversa...');
@@ -919,11 +952,11 @@ Processamento de COLTAN - Columbita-Tantalita.
       this.appendEntityMessage(respostaEspecial);
       
       // Mostrar botão para coletar a pista especial
-      if (data.pistas_encontradas && data.pistas_encontradas.includes('Anomalia_Química_Coltan')) {
-        this.showCollectButton('Anomalia_Química_Coltan');
+      if (data.pistas_encontradas && data.pistas_encontradas.includes('Química_Coltan')) {
+        this.showCollectButton('Química_Coltan');
       } else {
         // Forçar aparição da pista (fallback)
-        this.showCollectButton('Anomalia_Química_Coltan');
+        this.showCollectButton('Química_Coltan');
       }
       
     } catch (error) {
