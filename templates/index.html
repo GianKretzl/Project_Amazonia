@@ -56,24 +56,42 @@
             Você é um <strong>estagiário de jornalismo</strong> que acabou de encontrar o notebook de<br>
             <span class="highlight-purple">Gian Kretzl</span>, um jornalista investigativo desaparecido na Amazônia.<br><br>
 
-            No sistema dele, você descobriu um arquivo de áudio corrompido...<br>
+            No sistema dele, você descobriu um arquivo de áudio...<br>
             Sua última mensagem antes de desaparecer.
           </p>
         </div>
 
         <div class="terminal-line delay-7">
           <div class="audio-corrupted">
+            <div class="audio-header">
+              <span class="audio-file-name">📁 final_entry.mp3</span>
+              <span class="audio-date">Última modificação: 3 dias atrás</span>
+            </div>
+            <audio controls autoplay class="story-audio">
+              <source src="{{ url_for('static', filename='audio/final_entry.mp3') }}" type="audio/mpeg">
+              Seu navegador não suporta o elemento de áudio.
+            </audio>
             <div class="audio-wave"></div>
             <p class="audio-text">
-              "Eu... <span class="static">[estática]</span>... consegui. Não é só desmatamento.<br>
-              É algo maior. Eles estão usando a 'Fazenda Nova Fronteira' como fachada.<br>
-              O Dr. Arnaldo estava certo sobre o rio... <span class="static">[som de helicóptero]</span><br>
-              a <span class="highlight-purple">'Sombra Roxa'</span> é real. Eles estão vindo.<br>
-              A chave está no... <span class="static">[estática]</span>... no mapa do Pajé.<br>
-              Não deixe eles vencerem. O sistema de entrevistas...<br>
-              <span class="static">[estática]</span>... confie apenas no que você conectar..."
+              "Eu estava errado. Completamente errado.<br><br>
+
+              Achei que descobriria uma história sobre crimes ambientais, mas isso é muito, muito maior.<br><br>
+
+              A Sombra Roxa não é apenas poluição. É o rastro de algo que está sendo extraído das profundezas da terra.<br><br>
+
+              Coltan. O mineral mais valioso do mundo. O que move toda a tecnologia moderna. E está aqui, escondido sob a Amazônia.<br><br>
+
+              O fazendeiro, o cientista, até o pajé, todos sabem de algo. Mas ninguém, NINGUÉM fala abertamente. Eles têm medo.<br><br>
+
+              Venturi. Esse nome aparece em tudo que investigo. Deputado. Empresário. Controlador da região. Ele é a chave.<br><br>
+
+              Se você está ouvindo isso, é porque eu não consegui sair daqui. Eles me encontraram.<br><br>
+
+              Por favor, encontre as pistas. Complete o que comecei. Descubra a verdade sobre a Sombra Roxa antes que seja tarde demais.<br><br>
+
+              Meu nome é Gian Kretzl. Repórter investigativo. E essa pode ser minha última investigação."
             </p>
-            <p class="transmission-end">[TRANSMISSÃO ENCERRADA]</p>
+            <p class="transmission-end">[ARQUIVO RECUPERADO DO SISTEMA]</p>
           </div>
         </div>
 

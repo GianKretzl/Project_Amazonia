@@ -6,15 +6,16 @@ import entidades
 import desafios
 import enigmas
 from simulated_ai import simulated_reply_improved
+from database import db
 
 load_dotenv()
 
 try:
-    import openai
+    from openai import OpenAI
     OPENAI_AVAILABLE = True
-    openai.api_key = os.getenv('OPENAI_API_KEY')
+    openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 except Exception:
-    openai = None
+    openai_client = None
     OPENAI_AVAILABLE = False
 
 def create_app():
@@ -23,18 +24,19 @@ def create_app():
 
     @app.before_request
     def ensure_session():
-        if 'pistas' not in session:
-            session['pistas'] = []
+        # Gerar ID de sessão único se não existir
+        if 'session_id' not in session:
+            import uuid
+            session['session_id'] = str(uuid.uuid4())
+        
+        # Garantir que o jogador existe no banco
+        db.ensure_player(session['session_id'])
+        
+        # Manter alguns dados em sessão para compatibilidade
         if 'grupo' not in session:
             session['grupo'] = None
         if 'integrantes' not in session:
             session['integrantes'] = []
-        if 'enigmas_resolvidos' not in session:
-            session['enigmas_resolvidos'] = []
-        if 'desafios_completados' not in session:
-            session['desafios_completados'] = []
-        if 'dicas_desbloqueadas' not in session:
-            session['dicas_desbloqueadas'] = []
         if 'desafios_completados' not in session:
             session['desafios_completados'] = []
         if 'dicas_desbloqueadas' not in session:
@@ -79,12 +81,19 @@ def create_app():
     @app.route('/interview')
     def interview():
         return render_template('interview.html')
+    
+    @app.route('/test-audio')
+    def test_audio():
+        """Página de teste para áudios gerados"""
+        return render_template('test_audio.html')
 
     @app.route('/api/entities')
     def api_entities():
-        # Retorna entidades com estado de desbloqueio baseado nas pistas na sessão
-        pistas = session.get('pistas', [])
-        enigmas_resolvidos = session.get('enigmas_resolvidos', [])
+        # Retorna entidades com estado de desbloqueio baseado nas pistas no banco de dados
+        session_id = session['session_id']
+        pistas = db.get_pistas(session_id)
+        enigmas_resolvidos = db.get_enigmas_resolvidos(session_id)
+        
         resumo = []
         for ent in entidades.lista_entidades_resumo():
             liberado = ent.get('liberado_por_padrao', False)
@@ -107,7 +116,6 @@ def create_app():
         data = request.get_json() or {}
         entity_id = data.get('entity_id')
         message = data.get('message', '')
-        chat_history = data.get('history', [])  # Histórico de conversa
         
         if not entity_id or not message:
             return jsonify({'error': 'entity_id and message required'}), 400
@@ -115,6 +123,17 @@ def create_app():
         ent = entidades.ENTIDADES_DA_AMAZONIA.get(entity_id)
         if not ent:
             return jsonify({'error': 'unknown entity'}), 404
+        
+        session_id = session['session_id']
+        
+        # Incrementar contador de interações no banco de dados
+        interaction_count = db.increment_interaction(session_id, entity_id)
+        
+        # Recuperar histórico do banco de dados
+        chat_history = db.get_chat_history(session_id, entity_id, limit=10)
+        
+        # Salvar mensagem do usuário no banco
+        db.save_chat_message(session_id, entity_id, 'user', message)
 
         # Prompt melhorado com instruções mais específicas
         system_prompt = ent['prompt_base'] + """
@@ -134,7 +153,7 @@ CONTEXTO DA CONVERSA ANTERIOR:
 
         assistant_reply = None
         # Tentar usar OpenAI se configurado
-        if OPENAI_AVAILABLE and openai and openai.api_key:
+        if OPENAI_AVAILABLE and openai_client:
             try:
                 messages = [{'role': 'system', 'content': system_prompt}]
                 # Adicionar histórico
@@ -145,30 +164,94 @@ CONTEXTO DA CONVERSA ANTERIOR:
                     })
                 messages.append({'role': 'user', 'content': message})
                 
-                resp = openai.ChatCompletion.create(
+                resp = openai_client.chat.completions.create(
                     model=os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo'),
                     messages=messages,
                     max_tokens=500,
                     temperature=0.9  # Aumentado para respostas mais criativas
                 )
-                assistant_reply = resp.choices[0].message['content'].strip()
+                assistant_reply = resp.choices[0].message.content.strip()
             except Exception as e:
                 print(f"Erro OpenAI: {e}")
                 assistant_reply = simulated_reply_improved(ent, message, chat_history)
         else:
             assistant_reply = simulated_reply_improved(ent, message, chat_history)
+        
+        # Salvar resposta do assistente no banco
+        db.save_chat_message(session_id, entity_id, 'assistant', assistant_reply)
 
-        # Detectar pistas presenciais no texto da IA (palavra-chave simples)
+        # Detectar pistas presenciais no texto da IA (palavra-chave com contexto)
         found = []
         reply_lower = assistant_reply.lower()
-        for p in ent.get('pistas_chave', []):
-            # Converter underscore para espaço e verificar
-            pista_formatada = p.replace('_', ' ').lower()
-            if pista_formatada in reply_lower:
-                found.append(p)
+        message_lower = message.lower()
+        
+        # Só detectar pistas se a mensagem do usuário for relevante (mais de 5 caracteres e não for saudação)
+        saudacoes = ['oi', 'olá', 'ola', 'hey', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite']
+        eh_saudacao = any(saudacao == message_lower.strip() for saudacao in saudacoes)
+        
+        # Verificar se deve fazer contra-pergunta do Coltan (apenas Dr. Arnaldo, após 6 interações)
+        contra_pergunta = None
+        pistas_coletadas = db.get_pistas(session_id)
+        
+        if entity_id == 'biologo' and interaction_count >= 6:
+            # Verificar se já fez a contra-pergunta
+            resposta_anterior = db.get_contra_pergunta_feita(session_id, entity_id, 'coltan')
+            
+            # Se ainda não fez a contra-pergunta e já tem a pista Sombra_Roxa
+            if resposta_anterior is None and 'Sombra_Roxa' in pistas_coletadas:
+                # Verificar se a mensagem menciona coltan, químico, ou processar
+                if any(palavra in message_lower for palavra in ['coltan', 'químico', 'processar', 'mineral', 'metal', 'composição', 'substância']):
+                    contra_pergunta = {
+                        'texto': '🤔 Você parece interessado na composição química... Você quer saber EXATAMENTE qual anomalia eu detectei no rio?',
+                        'opcoes': ['Sim, quero saber os detalhes técnicos', 'Não, continue com a história']
+                    }
+                    # Salvar que a contra-pergunta foi feita
+                    db.save_contra_pergunta(session_id, entity_id, 'coltan', 'pendente')
+        
+        if not eh_saudacao and len(message.strip()) > 5:
+            for p in ent.get('pistas_chave', []):
+                # Pista especial "Química_Coltan" só após contra-pergunta
+                if p == 'Química_Coltan':
+                    # Só adiciona se respondeu "Sim" à contra-pergunta
+                    if data.get('resposta_contra_pergunta') == 'sim':
+                        found.append(p)
+                        # Salvar a resposta "sim" no banco
+                        db.save_contra_pergunta(session_id, entity_id, 'coltan', 'sim')
+                    continue
+                
+                # Converter underscore para espaço e verificar
+                pista_formatada = p.replace('_', ' ').lower()
+                
+                # Verificar se a pista aparece com contexto suficiente (não só uma menção)
+                if pista_formatada in reply_lower:
+                    # Contar quantas palavras da pista aparecem em frases completas
+                    palavras_pista = pista_formatada.split()
+                    if len(palavras_pista) >= 2 or len(reply_lower) > 100:  # Múltiplas palavras ou resposta longa
+                        found.append(p)
 
         # NOTE: não coletamos automaticamente — o frontend pode pedir para "coletar" uma pista
-        return jsonify({'reply': assistant_reply, 'pistas_encontradas': found})
+        return jsonify({
+            'reply': assistant_reply, 
+            'pistas_encontradas': found,
+            'contra_pergunta': contra_pergunta,
+            'interacoes': interaction_count
+        })
+    
+    @app.route('/api/chat/history/<entity_id>')
+    def api_chat_history(entity_id):
+        """Retorna o histórico de chat para uma entidade específica"""
+        session_id = session.get('session_id')
+        if not session_id:
+            return jsonify({'history': []})
+        
+        # Buscar histórico do banco de dados
+        history = db.get_chat_history(session_id, entity_id, limit=50)
+        
+        return jsonify({
+            'history': history,
+            'entity_id': entity_id,
+            'total_messages': len(history)
+        })
 
     @app.route('/api/collect', methods=['POST'])
     def api_collect():
@@ -176,16 +259,18 @@ CONTEXTO DA CONVERSA ANTERIOR:
         pista = data.get('pista')
         if not pista:
             return jsonify({'error': 'pista required'}), 400
-        pistas = session.get('pistas', [])
-        if pista not in pistas:
-            pistas.append(pista)
-            session['pistas'] = pistas
+        
+        session_id = session['session_id']
+        
+        # Adicionar pista ao banco de dados
+        db.add_pista(session_id, pista)
+        pistas = db.get_pistas(session_id)
         
         # Verificar se tem enigma disponível após coletar pista
         enigma_disponivel = enigmas.get_enigma_disponivel(pistas)
         
         # Retornar novas entidades desbloqueadas
-        enigmas_resolvidos = session.get('enigmas_resolvidos', [])
+        enigmas_resolvidos = db.get_enigmas_resolvidos(session_id)
         retorno = []
         for ent in entidades.lista_entidades_resumo():
             liberado = ent.get('liberado_por_padrao', False)
@@ -206,6 +291,134 @@ CONTEXTO DA CONVERSA ANTERIOR:
             'pistas': pistas, 
             'entities': retorno,
             'enigma_disponivel': enigma_disponivel
+        })
+    
+    @app.route('/api/pistas/detalhes')
+    def api_pistas_detalhes():
+        """Retorna informações detalhadas sobre todas as pistas coletadas - PROJETO SOMBRA ROXA"""
+        pistas_info = {
+            # ATO I: O MISTÉRIO DO RIO (Ciências)
+            'Sombra_Roxa': {
+                'titulo': '🟣 Sombra Roxa',
+                'descricao': 'Uma mancha roxa anormal detectada no Rio Dourado, vista de satélite. Foi GIAN quem deu esse nome.',
+                'detalhes': 'Dr. Arnaldo descobriu: é uma proliferação de cianobactérias tóxicas. Ela só prolifera na presença de dois químicos: mercúrio E um solvente industrial raríssimo usado para processar Coltan (Tântalo e Nióbio). O rio está MORRENDO.',
+                'conexoes': ['Química_Coltan', 'Gado_Não_Bebe_Rio', 'Sombra_Montanha_Fogo'],
+                'disciplina': 'Ciências',
+                'fonte': 'Dr. Arnaldo Silva',
+                'historia': 'ATO I: Dr. Arnaldo mostrou esta anomalia para Gian. Foi o início da investigação que custou a vida do repórter.'
+            },
+            'Química_Coltan': {
+                'titulo': '⚗️ Química do Coltan',
+                'descricao': 'Composição química específica detectada: Mercúrio + solvente industrial para processar Tântalo e Nióbio (Coltan).',
+                'detalhes': 'Coltan (Columbita-Tantalita) é o mineral usado em TODOS os dispositivos eletrônicos modernos: celulares, laptops, mísseis, satélites. Este coquetel químico SÓ existe em operações de processamento de Coltan. Mas não há minas oficiais na região. Alguém está fazendo isso ILEGALMENTE.',
+                'conexoes': ['Sombra_Roxa', 'Trilha_Ancestrais_Mapa_Coltan', 'Confissão_Venturi_Controle_Mundial'],
+                'disciplina': 'Ciências',
+                'fonte': 'Dr. Arnaldo Silva',
+                'importancia': '⭐ PISTA CRÍTICA - Revela QUE mineral está sendo extraído',
+                'historia': 'Esta foi a pista que fez Gian entender: não era sobre soja. Era sobre TECNOLOGIA.'
+            },
+            'Gado_Não_Bebe_Rio': {
+                'titulo': '🐄 O Mistério do Gado',
+                'descricao': 'Dr. Arnaldo fez uma pergunta estranha: "Por que o gado do Valdemar não morre de sede, com o rio roxo logo ao lado?"',
+                'detalhes': 'Se o Rio Dourado está tóxico (Sombra Roxa), como o gado da Fazenda Nova Fronteira sobrevive? Valdemar sabe que o rio é venenoso. Mas COMO ele sabe? Gian foi investigar essa contradição.',
+                'conexoes': ['Sombra_Roxa', 'Poço_Artesiano', 'Fazenda_Fachada_Logística'],
+                'disciplina': 'Ciências',
+                'fonte': 'Dr. Arnaldo Silva',
+                'historia': 'Esta pergunta levou Gian até Valdemar. Foi a ponte entre Ciências e Geografia.'
+            },
+            
+            # ATO II: A FACHADA DO PROGRESSO (Geografia)
+            'Poço_Artesiano': {
+                'titulo': '💧 Poço Artesiano',
+                'descricao': 'Valdemar admite: "Puxo água de poço artesiano. Não sou burro de usar o rio!"',
+                'detalhes': 'CONTRADIÇÃO REVELADA: Valdemar sabe que o rio é tóxico. Ele chama de "Sombra Roxa" mas diz que os ÍNDIOS deram esse nome. MENTIRA! Foi GIAN quem deu o nome. Por que Valdemar mente sobre isso?',
+                'conexoes': ['Gado_Não_Bebe_Rio', 'Fazenda_Fachada_Logística'],
+                'disciplina': 'Geografia',
+                'fonte': '"Seu" Valdemar',
+                'historia': 'Valdemar se contradiz. Ele sabe MAIS do que deveria saber sobre a Sombra Roxa.'
+            },
+            'Fazenda_Fachada_Logística': {
+                'titulo': '🚜 Fazenda Nova Fronteira: Uma Fachada',
+                'descricao': 'A fazenda NÃO DÁ LUCRO. Solo ruim, logística péssima. Mas Valdemar insiste que é "investimento".',
+                'detalhes': 'Valdemar gagueja quando perguntado sobre lucro. Ele menciona: "O Deputado Venturi garantiu que a hidrovia vai passar EXATAMENTE aqui." A fazenda não é para produzir soja. É para CONTROLAR A LOGÍSTICA da região. É um PORTÃO para a terra indígena.',
+                'conexoes': ['Poço_Artesiano', 'Deputado_Venturi_Conexão', 'Conflito_Reserva_Indígena', 'Confissão_Venturi_Controle_Mundial'],
+                'disciplina': 'Geografia',
+                'fonte': '"Seu" Valdemar',
+                'importancia': '⭐ PISTA CRÍTICA - Revela COMO eles planejam acessar o Coltan',
+                'historia': 'Gian entendeu: a fazenda é só uma ferramenta. Um peão no tabuleiro de Venturi.'
+            },
+            'Deputado_Venturi_Conexão': {
+                'titulo': '🤵 Deputado Venturi - O Homem de Terno',
+                'descricao': 'Valdemar menciona repetidamente: "O Deputado Venturi garantiu a licença ambiental, a hidrovia, o progresso..."',
+                'detalhes': 'Deputado Venturi facilitou TUDO: licenças, crédito rural, promessas de infraestrutura. Valdemar é apenas um PEÃO. Venturi é quem realmente comanda. Ele é o "Homem-de-Terno de Brasília" que o Pajé Yakamu mencionou.',
+                'conexoes': ['Fazenda_Fachada_Logística', 'Homem_Terno_Venturi', 'Confissão_Venturi_Controle_Mundial'],
+                'disciplina': 'Geografia',
+                'fonte': '"Seu" Valdemar',
+                'historia': 'Ao mencionar Venturi, Valdemar revelou quem REALMENTE está por trás de tudo.'
+            },
+            'Conflito_Reserva_Indígena': {
+                'titulo': '🌳 Conflito pela Reserva Indígena',
+                'descricao': 'Valdemar quer expandir para a Reserva Indígena. "Aquela terra está sendo DESPERDIÇADA!"',
+                'detalhes': 'Com as "pessoas certas em Brasília" (Venturi), Valdemar acredita que a reserva será liberada. Mas POR QUÊ querem essa terra específica? O que há lá de tão valioso? O Pajé Yakamu tem a resposta.',
+                'conexoes': ['Fazenda_Fachada_Logística', 'Trilha_Ancestrais_Mapa_Coltan', 'Sombra_Montanha_Fogo'],
+                'disciplina': 'Geografia',
+                'fonte': '"Seu" Valdemar',
+                'historia': 'Esta pista conecta Geografia com História. A terra que Valdemar quer esconde um segredo ancestral.'
+            },
+            
+            # ATO III: O MAPA DA MEMÓRIA (História)
+            'Sombra_Montanha_Fogo': {
+                'titulo': '� Sombra da Montanha de Fogo',
+                'descricao': 'Pajé Yakamu: "O rio não é mais Dourado. Está Roxo. É a Sombra da Montanha de Fogo."',
+                'detalhes': 'A "Montanha de Fogo" é o lugar onde os ancestrais se esconderam dos Bandeirantes. Um lugar de "pedras pretas e pesadas que brilham no escuro" (COLTAN). A Sombra Roxa vem da MONTANHA. É o veneno da mineração ilegal.',
+                'conexoes': ['Sombra_Roxa', 'Trilha_Ancestrais_Mapa_Coltan'],
+                'disciplina': 'História',
+                'fonte': 'Pajé Yakamu',
+                'historia': 'O passado (ancestrais) explica o presente (contaminação). História e Ciência se conectam.'
+            },
+            'Trilha_Ancestrais_Mapa_Coltan': {
+                'titulo': '🗺️ A Trilha dos Ancestrais',
+                'descricao': 'O mapa não é um papel. O mapa é a MEMÓRIA do povo. A Trilha dos Ancestrais leva à Montanha de Fogo (depósito de Coltan).',
+                'detalhes': 'A Trilha passa EXATAMENTE por baixo da Reserva Indígena. É por ISSO que Venturi quer a terra! Não é sobre desmatamento. É sobre CONTROLAR a maior reserva de Coltan (Tântalo/Nióbio) da região. Quem controla isso, controla a tecnologia do mundo!',
+                'conexoes': ['Sombra_Montanha_Fogo', 'Química_Coltan', 'Conflito_Reserva_Indígena', 'Confissão_Venturi_Controle_Mundial'],
+                'disciplina': 'História',
+                'fonte': 'Pajé Yakamu',
+                'importancia': '⭐ PISTA CRÍTICA - Revela ONDE está o Coltan',
+                'historia': 'Gian entendeu: Terra Indígena (História) = Local da Mina (Ciências). Ele juntou as peças. E morreu por isso.'
+            },
+            'Homem_Terno_Venturi': {
+                'titulo': '👔 O Homem-de-Terno é Venturi',
+                'descricao': 'Pajé Yakamu confirma: "O Homem-de-Terno de Brasília que quer nossa terra é o Deputado Venturi."',
+                'detalhes': 'Gian descobriu o nome. Yakamu confirmou. Venturi é o CÉREBRO. Valdemar é só uma ferramenta. A fazenda é só uma fachada. O objetivo é TOMAR A TERRA INDÍGENA para explorar o Coltan.',
+                'conexoes': ['Deputado_Venturi_Conexão', 'Trilha_Ancestrais_Mapa_Coltan', 'Confissão_Venturi_Controle_Mundial'],
+                'disciplina': 'História',
+                'fonte': 'Pajé Yakamu',
+                'historia': 'O vilão tem nome. Gian ia confrontá-lo. E desapareceu.'
+            },
+            
+            # CLÍMAX: O DOSSIÊ FINAL
+            'Confissão_Venturi_Controle_Mundial': {
+                'titulo': '� A Confissão de Venturi',
+                'descricao': 'Ao ser confrontado com todas as pistas, Venturi RI e confessa TUDO.',
+                'detalhes': '"Gian era bom. Quase tão bom quanto eu. Ele achou que eu queria o Coltan para vender. Que tolo. O Coltan é só o MEIO. O que eu quero é o CONTROLE. Tântalo, Nióbio... isso é o FUTURO. Celulares, mísseis, satélites. Quem controla essa montanha, controla a tecnologia do mundo. A Amazônia não é o pulmão do mundo. É a BATERIA do mundo. E eu sou o dono da bateria. Gian quis parar o futuro. O futuro é implacável."',
+                'conexoes': ['Química_Coltan', 'Fazenda_Fachada_Logística', 'Trilha_Ancestrais_Mapa_Coltan'],
+                'disciplina': 'Interdisciplinar',
+                'fonte': 'Deputado Venturi',
+                'importancia': '🏆 PISTA FINAL - A verdade completa. O dossiê de Gian está completo.',
+                'historia': 'Ciências + Geografia + História = A CONSPIRAÇÃO REVELADA. Gian estava certo. E você provou.'
+            }
+        }
+        
+        pistas_coletadas = session.get('pistas', [])
+        detalhes = {}
+        
+        for pista in pistas_coletadas:
+            if pista in pistas_info:
+                detalhes[pista] = pistas_info[pista]
+        
+        return jsonify({
+            'pistas': detalhes,
+            'total': len(pistas_coletadas)
         })
 
     @app.route('/api/desafios')
@@ -292,20 +505,21 @@ CONTEXTO DA CONVERSA ANTERIOR:
         if not enigma_id or not resposta:
             return jsonify({'error': 'enigma_id e resposta são obrigatórios'}), 400
         
+        session_id = session['session_id']
         resultado = enigmas.verificar_enigma(enigma_id, resposta)
         
+        # Salvar resultado no banco de dados
+        db.save_enigma_result(session_id, enigma_id, resposta, resultado['sucesso'])
+        
         if resultado['sucesso']:
-            # Marcar enigma como resolvido
-            resolvidos = session.get('enigmas_resolvidos', [])
-            if enigma_id not in resolvidos:
-                resolvidos.append(enigma_id)
-                session['enigmas_resolvidos'] = resolvidos
-            
             # Desbloquear entidade
             entidade_id = resultado['entidade_desbloqueada']
             ent = entidades.ENTIDADES_DA_AMAZONIA.get(entidade_id)
             
             # Retornar todas as entidades com status atualizado
+            enigmas_resolvidos = db.get_enigmas_resolvidos(session_id)
+            pistas = db.get_pistas(session_id)
+            
             retorno = []
             for e in entidades.lista_entidades_resumo():
                 liberado = e.get('liberado_por_padrao', False)
@@ -317,13 +531,13 @@ CONTEXTO DA CONVERSA ANTERIOR:
                 elif not liberado:
                     reqs = e.get('requisito_desbloqueio', [])
                     if reqs:
-                        liberado = all(r in session['pistas'] for r in reqs)
+                        liberado = all(r in pistas for r in reqs)
                 
                 retorno.append({**e, 'liberado': liberado})
             
             return jsonify({
                 **resultado,
-                'enigmas_resolvidos': session.get('enigmas_resolvidos', []),
+                'enigmas_resolvidos': enigmas_resolvidos,
                 'entities': retorno,
                 'entidade_desbloqueada': ent
             })

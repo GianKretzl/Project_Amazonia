@@ -20,7 +20,7 @@ ENIGMAS = {
         'resposta_correta': 'C',
         'explicacao': 'Correto! Se há químicos de processamento de Coltan acima da fazenda, e o Gian investigou o fazendeiro, ele suspeitava que a fazenda era uma fachada para esconder a mineração ilegal desse mineral valioso.',
         'recompensa_entidade': 'fazendeiro',
-        'requer_pistas': ['Anomalia_Química_Coltan', 'Sombra_Roxa']
+        'requer_pistas': ['Química_Coltan', 'Sombra_Roxa']
     },
     
     # Enigma para desbloquear Pajé Yakamu (após coletar pistas do Valdemar)

@@ -6,3 +6,7 @@ env/
 instance/
 .pytest_cache/
 node_modules/
+
+# Banco de dados do jogo
+*.db
+game_data.db

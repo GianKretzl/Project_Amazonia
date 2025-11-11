@@ -2,6 +2,66 @@
 // PROJETO SOMBRA ROXA - Interview System
 // ============================================
 
+// Gerenciador de Sons
+class SoundManager {
+  constructor() {
+    this.sounds = {
+      floresta: new Audio('/static/audio/ambiente_floresta.mp3'),
+      pistaColetada: new Audio('/static/audio/pista_coletada.mp3'),
+      alerta: new Audio('/static/audio/alerta_critico.mp3'),
+      estatica: new Audio('/static/audio/estatica_radio.mp3'),
+      revelacao: new Audio('/static/audio/revelacao_final.mp3')
+    };
+    
+    // Sem loops - áudios tocam uma vez
+    
+    // Configurar volumes
+    this.sounds.floresta.volume = 0.25;
+    this.sounds.pistaColetada.volume = 0.6;
+    this.sounds.alerta.volume = 0.65;
+    this.sounds.estatica.volume = 0.45;
+    this.sounds.revelacao.volume = 0.75;
+    
+    this.ambientePlaying = null;
+  }
+  
+  play(soundName) {
+    if (this.sounds[soundName]) {
+      this.sounds[soundName].currentTime = 0;
+      this.sounds[soundName].play().catch(e => console.log('Audio play failed:', e));
+    }
+  }
+  
+  stop(soundName) {
+    if (this.sounds[soundName]) {
+      this.sounds[soundName].pause();
+      this.sounds[soundName].currentTime = 0;
+    }
+  }
+  
+  stopAll() {
+    Object.values(this.sounds).forEach(sound => {
+      sound.pause();
+      sound.currentTime = 0;
+    });
+  }
+  
+  startAmbiente() {
+    if (!this.ambientePlaying) {
+      this.play('floresta');
+      this.ambientePlaying = true;
+    }
+  }
+  
+  stopAmbiente() {
+    this.stop('floresta');
+    this.ambientePlaying = false;
+  }
+}
+
+// Instância global do gerenciador de sons
+const soundManager = new SoundManager();
+
 class InterviewSystem {
   constructor() {
     this.currentEntity = null;
@@ -13,6 +73,7 @@ class InterviewSystem {
     this.desafiosDisponiveis = [];
     this.desafioAtual = null;
     this.respostaSelecionada = null;
+    this.pistasColetadas = [];  // Rastrear pistas coletadas localmente
     
     this.initElements();
     this.initExcalibur();
@@ -309,9 +370,14 @@ class InterviewSystem {
     }
   }
 
-  selectEntity(entity) {
+  async selectEntity(entity) {
     this.currentEntity = entity;
-    this.chatHistory = [];  // Limpar histórico ao trocar de entidade
+    
+    // Carregar histórico do banco de dados
+    await this.loadChatHistory(entity.id);
+    
+    // Iniciar som ambiente da floresta
+    soundManager.startAmbiente();
     
     if (this.entityName) this.entityName.textContent = entity.nome;
     if (this.entityEmoji) this.entityEmoji.textContent = entity.emoji || '❓';
@@ -330,12 +396,85 @@ class InterviewSystem {
     
     if (this.chatLog) {
       this.chatLog.innerHTML = '';
-      this.appendSystemMessage(`💬 Entrevista iniciada com ${entity.nome}`);
+      
+      // Se já tem histórico, renderizar as mensagens
+      if (this.chatHistory.length > 0) {
+        this.renderChatHistory();
+      } else {
+        // Primeira vez conversando - mostrar introdução
+        this.adicionarAudioIntroducao(entity);
+        this.appendSystemMessage(`💬 Entrevista iniciada com ${entity.nome}. Faça perguntas para descobrir pistas!`);
+      }
     }
     
     if (this.chatInput) {
       this.chatInput.focus();
     }
+  }
+
+  async loadChatHistory(entityId) {
+    try {
+      const res = await fetch(`/api/chat/history/${entityId}`);
+      const data = await res.json();
+      
+      if (data.history && data.history.length > 0) {
+        this.chatHistory = data.history;
+        console.log(`📚 Histórico carregado: ${data.history.length} mensagens`);
+      } else {
+        this.chatHistory = [];
+        console.log('📭 Nenhum histórico encontrado - primeira conversa');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+      this.chatHistory = [];
+    }
+  }
+
+  renderChatHistory() {
+    console.log(`🎨 Renderizando ${this.chatHistory.length} mensagens do histórico...`);
+    
+    // Renderizar histórico existente
+    this.chatHistory.forEach((msg, index) => {
+      console.log(`  Mensagem ${index + 1}: ${msg.role} - ${msg.content.substring(0, 50)}...`);
+      if (msg.role === 'user') {
+        this.appendUserMessage(msg.content);
+      } else if (msg.role === 'assistant') {
+        this.appendEntityMessage(msg.content);
+      }
+    });
+    
+    // Adicionar mensagem de continuação
+    this.appendSystemMessage(`🔄 Conversa retomada com ${this.currentEntity.nome}. Continue de onde parou!`);
+  }
+
+  adicionarAudioIntroducao(entity) {
+    // Mapear entidades para arquivos de áudio
+    const audioMap = {
+      'biologo': 'arnaldo_intro.mp3',
+      'fazendeiro': 'valdemar_intro.mp3',
+      'lider_indigena': 'yakamu_intro.mp3',
+      'deputado': 'venturi_confissao.mp3'
+    };
+    
+    const audioFile = audioMap[entity.id];
+    if (!audioFile) return;
+    
+    const audioContainer = document.createElement('div');
+    audioContainer.className = 'chat-message system-message audio-intro-message';
+    audioContainer.innerHTML = `
+      <div class="audio-intro-box">
+        <div class="audio-intro-header">
+          <span class="audio-icon">🎙️</span>
+          <span class="audio-title">Introdução - ${entity.nome}</span>
+        </div>
+        <audio controls class="entity-audio">
+          <source src="/static/audio/${audioFile}" type="audio/mpeg">
+          Seu navegador não suporta o elemento de áudio.
+        </audio>
+      </div>
+    `;
+    
+    this.chatLog.appendChild(audioContainer);
   }
 
   showQuestionSuggestions(entity) {
@@ -391,6 +530,9 @@ class InterviewSystem {
   }
 
   closeChatArea() {
+    // Tocar som de estática ao fechar
+    soundManager.play('estatica');
+    
     if (this.chatArea) {
       this.chatArea.style.display = 'none';
     }
@@ -420,8 +562,8 @@ class InterviewSystem {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           entity_id: this.currentEntity.id,
-          message: message,
-          history: this.chatHistory  // Enviar histórico
+          message: message
+          // Histórico agora vem do banco de dados - não precisa enviar
         })
       });
       
@@ -432,16 +574,29 @@ class InterviewSystem {
         typingIndicator.remove();
       }
       
-      // Adicionar ao histórico
+      // Adicionar ao histórico LOCAL (para manter sincronizado)
       this.chatHistory.push({ role: 'user', content: message });
       this.chatHistory.push({ role: 'assistant', content: data.reply });
       
       this.appendEntityMessage(data.reply);
       
+      // Verificar se há contra-pergunta (para Anomalia Química Coltan)
+      if (data.contra_pergunta) {
+        this.mostrarContraPergunta(data.contra_pergunta);
+      }
+      
       if (data.pistas_encontradas && data.pistas_encontradas.length > 0) {
         data.pistas_encontradas.forEach(pista => {
           this.showCollectButton(pista);
         });
+      }
+      
+      // Mostrar contador de interações (para debug/progresso)
+      if (data.interacoes && this.currentEntity.id === 'biologo') {
+        const interacoes = data.interacoes;
+        if (interacoes < 6) {
+          console.log(`Interações com Dr. Arnaldo: ${interacoes}/6 para desbloquear pista especial`);
+        }
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -508,20 +663,27 @@ class InterviewSystem {
   }
 
   showCollectButton(pista) {
+    // Verificar se a pista já foi coletada
+    if (this.pistasColetadas.includes(pista)) {
+      console.log(`⚠️ Pista "${pista}" já foi coletada anteriormente. Ignorando.`);
+      return;
+    }
+    
     const btn = document.createElement('button');
     btn.className = 'collect-pista-btn';
     btn.textContent = `🔍 Coletar pista: ${pista}`;
+    btn.dataset.pista = pista; // Adicionar identificador
     
     btn.addEventListener('click', async () => {
       btn.disabled = true;
-      await this.collectPista(pista);
+      await this.collectPista(pista, btn);
     });
     
     this.chatLog.appendChild(btn);
     this.chatLog.scrollTop = this.chatLog.scrollHeight;
   }
 
-  async collectPista(pista) {
+  async collectPista(pista, buttonElement) {
     try {
       const res = await fetch('/api/collect', {
         method: 'POST',
@@ -531,6 +693,21 @@ class InterviewSystem {
       
       const data = await res.json();
       
+      // DEBUG: Verificar resposta
+      console.log('📦 Resposta /api/collect:', data);
+      console.log('🔍 Enigma disponível?', data.enigma_disponivel);
+      
+      // Tocar som de conquista
+      soundManager.play('pistaColetada');
+      
+      // Remover o botão após coletar
+      if (buttonElement) {
+        buttonElement.style.transition = 'opacity 0.5s, transform 0.5s';
+        buttonElement.style.opacity = '0';
+        buttonElement.style.transform = 'scale(0.8)';
+        setTimeout(() => buttonElement.remove(), 500);
+      }
+      
       this.appendSystemMessage(`Pista "${pista}" adicionada ao dossiê!`);
       this.updatePistasDisplay(data.pistas);
       this.renderEntities(data.entities);
@@ -538,6 +715,7 @@ class InterviewSystem {
       
       // Verificar se há enigma disponível
       if (data.enigma_disponivel) {
+        console.log('🎯 Mostrando enigma:', data.enigma_disponivel.titulo);
         this.mostrarEnigma(data.enigma_disponivel);
       }
       
@@ -552,6 +730,9 @@ class InterviewSystem {
   }
 
   updatePistasDisplay(pistas) {
+    // Atualizar array local de pistas coletadas
+    this.pistasColetadas = pistas;
+    
     if (this.pistasCount) {
       this.pistasCount.textContent = pistas.length;
     }
@@ -565,8 +746,190 @@ class InterviewSystem {
           const badge = document.createElement('span');
           badge.className = 'pista-badge';
           badge.textContent = pista;
+          badge.style.cursor = 'pointer';
+          badge.title = 'Clique para ver detalhes';
+          
+          // Adicionar evento de clique para mostrar detalhes
+          badge.addEventListener('click', () => this.mostrarDetalhesPista(pista));
+          
           this.pistasList.appendChild(badge);
         });
+      }
+    }
+  }
+  
+  async mostrarDetalhesPista(pista) {
+    try {
+      const res = await fetch('/api/pistas/detalhes');
+      const data = await res.json();
+      
+      const pistaInfo = data.pistas[pista];
+      if (!pistaInfo) {
+        alert('Informações da pista não encontradas');
+        return;
+      }
+      
+      // Criar modal com detalhes da pista
+      const modal = document.createElement('div');
+      modal.className = 'modal-pista-detalhe';
+      modal.innerHTML = `
+        <div class="modal-pista-content">
+          <div class="pista-header">
+            <h2>${pistaInfo.titulo}</h2>
+            <button class="close-pista-modal">×</button>
+          </div>
+          <div class="pista-body">
+            <div class="pista-meta">
+              <span class="pista-disciplina">📚 ${pistaInfo.disciplina}</span>
+              <span class="pista-fonte">👤 Fonte: ${pistaInfo.fonte}</span>
+            </div>
+            ${pistaInfo.importancia ? `<div class="pista-importancia">${pistaInfo.importancia}</div>` : ''}
+            <p class="pista-descricao">${pistaInfo.descricao}</p>
+            <div class="pista-detalhes">
+              <h3>🔍 Análise Detalhada:</h3>
+              <p>${pistaInfo.detalhes}</p>
+            </div>
+            ${pistaInfo.historia ? `
+              <div class="pista-historia">
+                <h3>📖 Na História de Gian:</h3>
+                <p>${pistaInfo.historia}</p>
+              </div>
+            ` : ''}
+            <div class="pista-conexoes">
+              <h3>🔗 Conexões com outras pistas:</h3>
+              <div class="conexoes-lista">
+                ${pistaInfo.conexoes.map(conexao => {
+                  const tem = data.pistas[conexao];
+                  return `<span class="conexao-badge ${tem ? 'coletada' : 'nao-coletada'}">
+                    ${tem ? '✅' : '🔒'} ${conexao.replace(/_/g, ' ')}
+                  </span>`;
+                }).join('')}
+              </div>
+              <p class="dica-investigacao">💡 Colete todas as pistas conectadas para montar o dossiê completo de Gian!</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Event listener para fechar
+      modal.querySelector('.close-pista-modal').addEventListener('click', () => {
+        modal.remove();
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+      
+    } catch (error) {
+      console.error('Erro ao buscar detalhes da pista:', error);
+      alert('Erro ao carregar detalhes da pista');
+    }
+  }
+  
+  mostrarContraPergunta(contraPergunta) {
+    // Tocar som de alerta
+    soundManager.play('alerta');
+    
+    // Criar elemento de contra-pergunta interativo
+    const div = document.createElement('div');
+    div.className = 'contra-pergunta-box';
+    div.innerHTML = `
+      <div class="contra-pergunta-header">
+        <span class="emoji-pensativo">🤔</span>
+        <p class="contra-pergunta-texto">${contraPergunta.texto}</p>
+      </div>
+      <div class="contra-pergunta-opcoes">
+        <button class="btn-contra-resposta" data-resposta="sim">
+          ${contraPergunta.opcoes[0]}
+        </button>
+        <button class="btn-contra-resposta" data-resposta="nao">
+          ${contraPergunta.opcoes[1]}
+        </button>
+      </div>
+    `;
+    
+    this.chatLog.appendChild(div);
+    this.chatLog.scrollTop = this.chatLog.scrollHeight;
+    
+    // Event listeners para as respostas
+    div.querySelectorAll('.btn-contra-resposta').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const resposta = btn.dataset.resposta;
+        
+        // Desabilitar botões
+        div.querySelectorAll('.btn-contra-resposta').forEach(b => b.disabled = true);
+        
+        if (resposta === 'sim') {
+          // Enviar mensagem especial para obter a pista Anomalia_Química_Coltan
+          await this.responderContraPergunta('Sim, quero saber os detalhes técnicos da anomalia');
+        } else {
+          this.appendSystemMessage('Dr. Arnaldo suspira e continua a conversa...');
+        }
+        
+        // Remover a contra-pergunta após resposta
+        setTimeout(() => div.remove(), 2000);
+      });
+    });
+  }
+  
+  async responderContraPergunta(mensagem) {
+    this.appendUserMessage(mensagem);
+    
+    const typingIndicator = this.showTypingIndicator();
+    
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_id: this.currentEntity.id,
+          message: mensagem,
+          resposta_contra_pergunta: 'sim'  // Flag especial - histórico vem do banco
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (typingIndicator && typingIndicator.parentNode) {
+        typingIndicator.remove();
+      }
+      
+      // Resposta especial com a anomalia química
+      const respostaEspecial = `*Dr. Arnaldo ajusta os óculos e mostra seus dados*
+
+Muito bem. Vou ser específico.
+
+Nas amostras que coletei, identifiquei uma ANOMALIA QUÍMICA muito particular: compostos de fluoreto e ácido nítrico em concentrações absurdas. Esse coquetel químico específico só tem UMA aplicação conhecida...
+
+Processamento de COLTAN - Columbita-Tantalita.
+
+*mostra gráficos*
+
+É o mineral usado em todos os dispositivos eletrônicos modernos. Celulares, laptops, drones... Vale mais que ouro. E alguém está processando toneladas dele ilegalmente aqui.
+
+*voz baixa* Por isso o Gian desapareceu. Ele descobriu a verdade.`;
+      
+      this.chatHistory.push({ role: 'user', content: mensagem });
+      this.chatHistory.push({ role: 'assistant', content: respostaEspecial });
+      
+      this.appendEntityMessage(respostaEspecial);
+      
+      // Mostrar botão para coletar a pista especial
+      if (data.pistas_encontradas && data.pistas_encontradas.includes('Anomalia_Química_Coltan')) {
+        this.showCollectButton('Anomalia_Química_Coltan');
+      } else {
+        // Forçar aparição da pista (fallback)
+        this.showCollectButton('Anomalia_Química_Coltan');
+      }
+      
+    } catch (error) {
+      console.error('Erro ao responder contra-pergunta:', error);
+      if (typingIndicator && typingIndicator.parentNode) {
+        typingIndicator.remove();
       }
     }
   }

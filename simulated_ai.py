@@ -5,9 +5,59 @@ import random
 
 def simulated_reply_improved(ent, message, chat_history=None):
     """Resposta inteligente e contextual quando OpenAI não está disponível"""
-    msg = message.lower()
+    msg = message.lower().strip()
     entity_id = ent['id']
     nome = ent['nome']
+    
+    # Detectar saudações simples
+    saudacoes = ['oi', 'olá', 'ola', 'hey', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite', 'e ai', 'eai']
+    eh_saudacao_simples = msg in saudacoes or len(msg) < 4
+    
+    # Se for saudação simples, retornar introdução sem pistas
+    if eh_saudacao_simples:
+        introducoes = {
+            'biologo': """*Dr. Arnaldo olha para você com expressão preocupada*
+
+Olá... você deve estar aqui pela investigação, não é? Sou Dr. Arnaldo Silva, biólogo de campo do INPA.
+
+*ajusta os óculos nervosamente*
+
+Há algo muito estranho acontecendo nesta região. Mas antes de contar, preciso saber se posso confiar em você.
+
+O que você gostaria de saber especificamente? Pode perguntar sobre minha pesquisa, sobre o rio, ou sobre... eventos recentes.""",
+            
+            'fazendeiro': """*Valdemar olha desconfiado*
+
+Olá. E você é...? Mais um jornalista bisbilhoteiro? Ou do IBAMA?
+
+*cruza os braços*
+
+Sou Valdemar, dono da Fazenda Nova Fronteira. Produção de soja e gado. Tudo legal, tudo certificado.
+
+O que você quer saber? Faça perguntas diretas que eu decido se respondo.""",
+            
+            'lider_indigena': """*Yakamu observa você em silêncio por um momento*
+
+...Olá, visitante.
+
+*tom cauteloso*
+
+Sou Yakamu, guardião das histórias do meu povo. Você vem com perguntas, imagino.
+
+Muitos vêm aqui. Poucos ouvem de verdade. Prove que você é diferente. Pergunte com respeito, e talvez eu compartilhe o que sei.""",
+            
+            'politico': """*Deputado Venturi oferece um sorriso político calculado*
+
+Olá! Sempre um prazer receber visitantes interessados no desenvolvimento da Amazônia.
+
+*aperto de mão firme demais*
+
+Deputado Venturi, três mandatos na Comissão de Desenvolvimento Regional. Como posso ajudá-lo?
+
+Temos grandes planos para esta região. Progresso sustentável, sabe como é. Em que posso ser útil?"""
+        }
+        
+        return introducoes.get(entity_id, f"Olá! Sou {nome}. O que você gostaria de saber?")
     
     # Verificar histórico para evitar respostas idênticas
     chat_history = chat_history or []

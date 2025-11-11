@@ -1,0 +1,145 @@
+{
+  "floresta_amazonica": {
+    "tipo": "ambiente",
+    "duracao": "30-60s loop",
+    "descricao": "Sons da floresta amazônica: pássaros cantando, grilos, vento nas folhas, som de água ao fundo",
+    "uso": "Background durante entrevistas",
+    "tags": [
+      "amazonia",
+      "floresta",
+      "natureza",
+      "passaros",
+      "ambiente"
+    ],
+    "volume": "baixo (20-30%)",
+    "arquivo_sugerido": "ambiente_floresta.mp3"
+  },
+  "pista_coletada": {
+    "tipo": "notificacao",
+    "duracao": "2-3s",
+    "descricao": "Som de conquista/descoberta: sino suave + brilho digital ascendente",
+    "uso": "Quando jogador coleta uma pista",
+    "tags": [
+      "sucesso",
+      "descoberta",
+      "conquista",
+      "notificacao"
+    ],
+    "volume": "médio (50-60%)",
+    "arquivo_sugerido": "pista_coletada.mp3"
+  },
+  "alerta_importante": {
+    "tipo": "alerta",
+    "duracao": "3-5s",
+    "descricao": "Som de alerta urgente mas não agressivo: pulso grave + harmônicos tensos",
+    "uso": "Quando contra-pergunta aparece ou momento crítico",
+    "tags": [
+      "alerta",
+      "urgente",
+      "tensao",
+      "importante"
+    ],
+    "volume": "médio-alto (60-70%)",
+    "arquivo_sugerido": "alerta_critico.mp3"
+  },
+  "rio_contaminado": {
+    "tipo": "ambiente",
+    "duracao": "20-30s",
+    "descricao": "Som de rio com reverberação estranha, água borbulhando de forma irregular, tons roxos/químicos",
+    "uso": "Background durante revelação da Sombra Roxa",
+    "tags": [
+      "rio",
+      "agua",
+      "contaminacao",
+      "quimico",
+      "misterioso"
+    ],
+    "volume": "médio (40-50%)",
+    "arquivo_sugerido": "rio_contaminado.mp3"
+  },
+  "helicoptero_distante": {
+    "tipo": "efeito",
+    "duracao": "10-15s",
+    "descricao": "Som de helicóptero distante se aproximando lentamente, criando tensão",
+    "uso": "Momentos de perigo/ameaça na narrativa",
+    "tags": [
+      "helicoptero",
+      "perigo",
+      "ameaca",
+      "tensao"
+    ],
+    "volume": "médio (50%)",
+    "arquivo_sugerido": "helicoptero.mp3"
+  },
+  "tribal_ancestral": {
+    "tipo": "musical",
+    "duracao": "30-45s loop",
+    "descricao": "Percussão tribal suave, flauta indígena, cânticos distantes, atmosfera mística",
+    "uso": "Background durante entrevista com Pajé Yakamu",
+    "tags": [
+      "indigena",
+      "tribal",
+      "ancestral",
+      "mistico",
+      "flauta"
+    ],
+    "volume": "baixo (30-40%)",
+    "arquivo_sugerido": "tribal_ancestral.mp3"
+  },
+  "maquinas_industrial": {
+    "tipo": "ambiente",
+    "duracao": "20-30s",
+    "descricao": "Som de maquinário pesado distante, motosserras, tratores, atividade industrial",
+    "uso": "Background durante entrevista com fazendeiro",
+    "tags": [
+      "industrial",
+      "maquinas",
+      "fazenda",
+      "mecanico"
+    ],
+    "volume": "baixo (25-35%)",
+    "arquivo_sugerido": "maquinas_fazenda.mp3"
+  },
+  "revelacao_final": {
+    "tipo": "musical",
+    "duracao": "15-20s",
+    "descricao": "Crescendo dramático orquestral, revelação épica, resolução de mistério",
+    "uso": "Quando jogador completa a investigação",
+    "tags": [
+      "dramatico",
+      "revelacao",
+      "final",
+      "orquestral"
+    ],
+    "volume": "alto (70-80%)",
+    "arquivo_sugerido": "revelacao_final.mp3"
+  },
+  "digitacao_terminal": {
+    "tipo": "efeito",
+    "duracao": "1-2s loop",
+    "descricao": "Som de digitação em teclado mecânico vintage, ritmo constante",
+    "uso": "Durante animações de texto tipo terminal",
+    "tags": [
+      "teclado",
+      "digitacao",
+      "terminal",
+      "retro"
+    ],
+    "volume": "muito baixo (15-20%)",
+    "arquivo_sugerido": "digitacao_terminal.mp3"
+  },
+  "estatica_radio": {
+    "tipo": "efeito",
+    "duracao": "3-5s",
+    "descricao": "Estática de rádio/transmissão interrompida, interferência",
+    "uso": "Transições e momentos de comunicação cortada",
+    "tags": [
+      "estatica",
+      "radio",
+      "interferencia",
+      "glitch"
+    ],
+    "volume": "médio (40-50%)",
+    "arquivo_sugerido": "estatica_radio.mp3"
+  }
+}
