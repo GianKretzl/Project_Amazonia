@@ -64,7 +64,7 @@
 #### Deputado Venturi (🤵)
 - Desbloqueado com "Mapa_do_Coltan" e "Homem_de_Terno"
 - Vilão final da conspiração
-- Revela o destino de Clara quando confrontado
+- Revela o destino do Gian quando confrontado
 - Filosofia: "A floresta é o novo petróleo"
 - Tom: polido, depois arrogante e ameaçador
 

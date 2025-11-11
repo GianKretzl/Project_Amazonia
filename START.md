@@ -35,7 +35,7 @@ LOGIN → INTRO → BRIEFING → ENTREVISTAS → RESOLVER O CASO
 
 ### 2. INTRO (Após login)
 - Background da Amazônia revelando
-- Áudio corrompido de Clara
+- Áudio corrompido do Gian
 - Prólogo da história
 
 ### 3. BRIEFING

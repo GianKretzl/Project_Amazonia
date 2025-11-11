@@ -8,17 +8,17 @@
 
 ## 📖 A História
 
-Você é um **estagiário de jornalismo** que encontrou o notebook de **Gian Kretzl**, uma jornalista investigativa desaparecida há 3 dias na Amazônia Legal.
+Você é um **estagiário de jornalismo** que encontrou o notebook de **Gian Kretzl**, um jornalista investigativo desaparecido há 3 dias na Amazônia Legal.
 
-No sistema dela, você descobre um arquivo de áudio corrompido - sua última mensagem antes de desaparecer. Ela menciona algo chamado **"Sombra Roxa"**, uma conspiração envolvendo a Fazenda Nova Fronteira, e um mapa secreto nas terras indígenas.
+No sistema dele, você descobre um arquivo de áudio corrompido - sua última mensagem antes de desaparecer. Ele menciona algo chamado **"Sombra Roxa"**, uma conspiração envolvendo a Fazenda Nova Fronteira, e um mapa secreto nas terras indígenas.
 
 ### 🎯 Sua Missão
 
 - Descobrir o que é a "Sombra Roxa"
-- Entrevistar as fontes de Clara usando IA
+- Entrevistar as fontes do Gian usando IA
 - Conectar pistas de **Ciências**, **Geografia** e **História**
 - Expor a conspiração
-- Descobrir o que aconteceu com Clara
+- Descobrir o que aconteceu com o Gian
 
 ## 🎭 Personagens
 

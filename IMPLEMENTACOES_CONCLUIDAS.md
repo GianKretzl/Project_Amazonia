@@ -129,7 +129,7 @@ graph TD
 │                                     │
 │  system@notebook:~$ Inicializando...│
 │  [OK] Sistema operacional          │
-│  [CRÍTICO] Proprietária DESAPARECIDA│
+│  [CRÍTICO] Proprietário DESAPARECIDO│
 │                                     │
 │  🎮 PROJETO SOMBRA ROXA            │
 │                                     │

@@ -41,12 +41,14 @@
       </div>
 
       <!-- Visualização Excalibur -->
+      <!-- TEMPORARIAMENTE DESATIVADO
       <div class="excalibur-section">
         <h2>🎮 VISUALIZAÇÃO DO CASO</h2>
         <div id="excalibur-container" class="excalibur-canvas-wrapper">
-          <!-- Canvas será inserido aqui -->
+          Canvas será inserido aqui
         </div>
       </div>
+      -->
 
       <!-- Chat de Entrevista -->
       <div id="chat-area" class="chat-area" style="display:none">
@@ -61,6 +63,31 @@
           <button id="close-chat" class="btn-close">✕</button>
         </div>
 
+        <!-- Botão de Desafios -->
+        <div class="desafios-section">
+          <button id="btn-desafios" class="btn-desafios">
+            <span class="desafio-icon">🎓</span>
+            <span>Responder Desafio Educacional</span>
+            <span id="desafios-badge" class="badge">0</span>
+          </button>
+        </div>
+
+        <!-- Dicas Desbloqueadas -->
+        <div id="dicas-area" class="dicas-area" style="display:none">
+          <h4><span class="unlock-icon">🔓</span> Dicas Desbloqueadas:</h4>
+          <div id="dicas-list" class="dicas-list">
+            <!-- Dicas aparecem aqui -->
+          </div>
+        </div>
+
+        <!-- Sugestões de perguntas -->
+        <div id="question-suggestions" class="question-suggestions">
+          <p class="suggestions-label">💡 Sugestões de perguntas:</p>
+          <div id="suggestions-buttons" class="suggestions-buttons">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+
         <div id="chat-log" class="chat-log">
           <!-- Mensagens aparecem aqui -->
         </div>
@@ -70,16 +97,62 @@
             id="chat-input" 
             type="text"
             autocomplete="off" 
-            placeholder="Digite sua pergunta..." 
+            placeholder="Digite sua pergunta ou clique em uma sugestão acima..." 
             class="chat-input"
           >
           <button type="submit" class="btn-send">Enviar</button>
         </form>
       </div>
 
+      <!-- Modal de Desafio -->
+      <div id="modal-desafio" class="modal" style="display:none">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>🎓 Desafio Educacional</h2>
+            <button id="close-modal" class="btn-close-modal">✕</button>
+          </div>
+          <div class="modal-body">
+            <p id="desafio-disciplina" class="desafio-disciplina"></p>
+            <p id="desafio-pergunta" class="desafio-pergunta"></p>
+            <div id="desafio-opcoes" class="desafio-opcoes">
+              <!-- Opções aparecem aqui -->
+            </div>
+            <button id="btn-confirmar-resposta" class="btn-confirmar" disabled>Confirmar Resposta</button>
+          </div>
+          <div id="resultado-area" class="resultado-area" style="display:none">
+            <div id="resultado-conteudo"></div>
+            <button id="btn-proximo-desafio" class="btn-proximo">Próximo Desafio</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <div class="interview-footer">
-        <p>💡 <strong>Dica:</strong> Faça perguntas específicas. Mencione nomes, locais e conceitos para obter mais informações.</p>
+        <div class="instrucoes-pistas" style="background: linear-gradient(135deg, rgba(88, 28, 135, 0.3), rgba(59, 130, 246, 0.3)); padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+          <h3 style="color: #00ff88; margin-bottom: 15px; text-align: center;">🎯 COMO CONSEGUIR PISTAS</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; text-align: left;">
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 4px solid #00ff88;">
+              <strong style="color: #00ff88;">1️⃣ Escolha uma Fonte</strong>
+              <p style="margin: 5px 0; font-size: 14px;">Clique em um dos personagens acima (Dr. Arnaldo, Valdemar, etc.)</p>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+              <strong style="color: #3b82f6;">2️⃣ Faça Perguntas</strong>
+              <p style="margin: 5px 0; font-size: 14px;">Pergunte sobre "sombra roxa", "Gian", "poluição", "rios", etc.</p>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+              <strong style="color: #f59e0b;">3️⃣ Colete as Pistas</strong>
+              <p style="margin: 5px 0; font-size: 14px;">Aparecerá um botão "🔍 Coletar pista" - clique nele!</p>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 4px solid #a855f7;">
+              <strong style="color: #a855f7;">4️⃣ Faça Desafios</strong>
+              <p style="margin: 5px 0; font-size: 14px;">Complete desafios educacionais para ganhar dicas especiais</p>
+            </div>
+          </div>
+          <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.2); border-radius: 8px; text-align: center;">
+            <strong style="color: #60a5fa;">💡 EXEMPLO:</strong> Pergunte ao Dr. Arnaldo: "O que aconteceu nos rios?" → Ele vai mencionar pistas → Clique em "🔍 Coletar pista"
+          </div>
+        </div>
+        <p>🎓 <strong>Desafios:</strong> Responda perguntas educacionais para desbloquear dicas especiais nas entrevistas!</p>
       </div>
     </div>
 

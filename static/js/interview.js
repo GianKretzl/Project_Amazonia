@@ -9,6 +9,10 @@ class InterviewSystem {
     this.excaliburEngine = null;
     this.excaliburScene = null;
     this.entityActors = {};
+    this.chatHistory = [];  // Histórico de conversa
+    this.desafiosDisponiveis = [];
+    this.desafioAtual = null;
+    this.respostaSelecionada = null;
     
     this.initElements();
     this.initExcalibur();
@@ -27,6 +31,21 @@ class InterviewSystem {
     this.pistasCount = document.getElementById('pistas-count');
     this.pistasList = document.getElementById('pistas-list');
     this.closeChat = document.getElementById('close-chat');
+    
+    // Elementos de desafios
+    this.btnDesafios = document.getElementById('btn-desafios');
+    this.desafiosBadge = document.getElementById('desafios-badge');
+    this.modalDesafio = document.getElementById('modal-desafio');
+    this.closeModal = document.getElementById('close-modal');
+    this.desafioPergunta = document.getElementById('desafio-pergunta');
+    this.desafioDisciplina = document.getElementById('desafio-disciplina');
+    this.desafioOpcoes = document.getElementById('desafio-opcoes');
+    this.btnConfirmarResposta = document.getElementById('btn-confirmar-resposta');
+    this.resultadoArea = document.getElementById('resultado-area');
+    this.resultadoConteudo = document.getElementById('resultado-conteudo');
+    this.btnProximoDesafio = document.getElementById('btn-proximo-desafio');
+    this.dicasArea = document.getElementById('dicas-area');
+    this.dicasList = document.getElementById('dicas-list');
 
     if (this.chatForm) {
       this.chatForm.addEventListener('submit', (e) => this.handleChatSubmit(e));
@@ -34,6 +53,22 @@ class InterviewSystem {
 
     if (this.closeChat) {
       this.closeChat.addEventListener('click', () => this.closeChatArea());
+    }
+    
+    if (this.btnDesafios) {
+      this.btnDesafios.addEventListener('click', () => this.abrirDesafio());
+    }
+    
+    if (this.closeModal) {
+      this.closeModal.addEventListener('click', () => this.fecharModal());
+    }
+    
+    if (this.btnConfirmarResposta) {
+      this.btnConfirmarResposta.addEventListener('click', () => this.confirmarResposta());
+    }
+    
+    if (this.btnProximoDesafio) {
+      this.btnProximoDesafio.addEventListener('click', () => this.proximoDesafio());
     }
   }
 
@@ -143,9 +178,9 @@ class InterviewSystem {
       card.classList.add('locked');
     }
     
-    const requirements = entity.requisito_desbloqueio || [];
-    const reqText = requirements.length > 0 
-      ? `<p class="unlock-requirement">🔐 Requer: ${requirements.join(', ')}</p>`
+    // Removido: não mostrar requisitos de pistas nos cards
+    const lockMessage = !entity.liberado 
+      ? '<p class="unlock-requirement">🔐 Complete enigmas para desbloquear</p>'
       : '';
     
     card.innerHTML = `
@@ -156,7 +191,7 @@ class InterviewSystem {
           <p class="discipline">${entity.disciplina}</p>
         </div>
       </div>
-      ${reqText}
+      ${lockMessage}
       ${!entity.liberado ? '<span class="lock-indicator">🔒</span>' : ''}
     `;
     
@@ -276,10 +311,17 @@ class InterviewSystem {
 
   selectEntity(entity) {
     this.currentEntity = entity;
+    this.chatHistory = [];  // Limpar histórico ao trocar de entidade
     
     if (this.entityName) this.entityName.textContent = entity.nome;
     if (this.entityEmoji) this.entityEmoji.textContent = entity.emoji || '❓';
     if (this.entityDiscipline) this.entityDiscipline.textContent = entity.disciplina;
+    
+    // Carregar desafios desta entidade
+    this.carregarDesafios(entity.id);
+    
+    // Mostrar sugestões de perguntas
+    this.showQuestionSuggestions(entity);
     
     if (this.chatArea) {
       this.chatArea.style.display = 'block';
@@ -288,12 +330,64 @@ class InterviewSystem {
     
     if (this.chatLog) {
       this.chatLog.innerHTML = '';
-      this.appendSystemMessage(`Entrevista iniciada com ${entity.nome}`);
+      this.appendSystemMessage(`💬 Entrevista iniciada com ${entity.nome}`);
     }
     
     if (this.chatInput) {
       this.chatInput.focus();
     }
+  }
+
+  showQuestionSuggestions(entity) {
+    const suggestionsContainer = document.getElementById('suggestions-buttons');
+    if (!suggestionsContainer) return;
+    
+    // Sugestões específicas por entidade
+    const suggestions = {
+      'biologo': [
+        'O que é a sombra roxa?',
+        'Você conhece a Gian Kretzl?',
+        'O que é Coltan?',
+        'Por que você está com medo?'
+      ],
+      'fazendeiro': [
+        'O que você produz na fazenda?',
+        'A fazenda é lucrativa?',
+        'O que você sabe sobre a sombra roxa?',
+        'Por que quer expandir para a reserva indígena?'
+      ],
+      'lider_indigena': [
+        'O que aconteceu com o rio?',
+        'O que é o Mapa da Montanha de Fogo?',
+        'Quem é o homem de terno?',
+        'O que você sabe sobre Coltan?'
+      ],
+      'politico': [
+        'Qual é seu interesse na Amazônia?',
+        'Você conhece o Valdemar?',
+        'O que aconteceu com a Gian Kretzl?',
+        'Qual é o verdadeiro plano?'
+      ]
+    };
+    
+    const entitySuggestions = suggestions[entity.id] || [
+      'Conte-me sobre você',
+      'O que você sabe sobre a investigação?',
+      'Você pode me ajudar?'
+    ];
+    
+    suggestionsContainer.innerHTML = '';
+    entitySuggestions.forEach(question => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'suggestion-btn';
+      btn.textContent = question;
+      btn.addEventListener('click', () => {
+        this.chatInput.value = question;
+        this.chatInput.focus();
+      });
+      suggestionsContainer.appendChild(btn);
+    });
   }
 
   closeChatArea() {
@@ -317,17 +411,30 @@ class InterviewSystem {
     this.appendUserMessage(message);
     this.chatInput.value = '';
     
+    // Mostrar indicador de digitação
+    const typingIndicator = this.showTypingIndicator();
+    
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           entity_id: this.currentEntity.id,
-          message: message
+          message: message,
+          history: this.chatHistory  // Enviar histórico
         })
       });
       
       const data = await res.json();
+      
+      // Remover indicador de digitação
+      if (typingIndicator && typingIndicator.parentNode) {
+        typingIndicator.remove();
+      }
+      
+      // Adicionar ao histórico
+      this.chatHistory.push({ role: 'user', content: message });
+      this.chatHistory.push({ role: 'assistant', content: data.reply });
       
       this.appendEntityMessage(data.reply);
       
@@ -338,8 +445,32 @@ class InterviewSystem {
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      this.appendSystemMessage('Erro ao comunicar com o servidor');
+      
+      // Remover indicador de digitação em caso de erro
+      if (typingIndicator && typingIndicator.parentNode) {
+        typingIndicator.remove();
+      }
+      
+      this.appendSystemMessage('❌ Erro ao comunicar com o servidor. Tente novamente.');
     }
+  }
+
+  showTypingIndicator() {
+    const div = document.createElement('div');
+    div.className = 'chat-message entity typing-indicator';
+    div.innerHTML = `
+      <div class="message-sender entity">${this.currentEntity.nome}</div>
+      <div class="message-content">
+        <span class="typing-dots">
+          <span>●</span>
+          <span>●</span>
+          <span>●</span>
+        </span>
+      </div>
+    `;
+    this.chatLog.appendChild(div);
+    this.chatLog.scrollTop = this.chatLog.scrollHeight;
+    return div;
   }
 
   appendUserMessage(text) {
@@ -405,6 +536,11 @@ class InterviewSystem {
       this.renderEntities(data.entities);
       this.updateExcaliburActors(data.entities);
       
+      // Verificar se há enigma disponível
+      if (data.enigma_disponivel) {
+        this.mostrarEnigma(data.enigma_disponivel);
+      }
+      
       // Atualizar estado anterior
       data.entities.forEach(e => {
         this.previousEntitiesState[e.id] = { liberado: e.liberado };
@@ -439,6 +575,281 @@ class InterviewSystem {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+  
+  // ============================================
+  // SISTEMA DE DESAFIOS EDUCACIONAIS
+  // ============================================
+  
+  async carregarDesafios(entityId) {
+    try {
+      const res = await fetch(`/api/desafios/${entityId}`);
+      const data = await res.json();
+      
+      this.desafiosDisponiveis = data.desafios;
+      
+      // Atualizar badge
+      if (this.desafiosBadge) {
+        this.desafiosBadge.textContent = this.desafiosDisponiveis.length;
+        this.desafiosBadge.style.display = this.desafiosDisponiveis.length > 0 ? 'inline' : 'none';
+      }
+      
+      // Mostrar dicas desbloqueadas
+      if (data.dicas && data.dicas.length > 0) {
+        this.mostrarDicas(data.dicas);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar desafios:', error);
+    }
+  }
+  
+  mostrarDicas(dicas) {
+    if (!this.dicasArea || !this.dicasList) return;
+    
+    this.dicasList.innerHTML = '';
+    dicas.forEach(dica => {
+      const div = document.createElement('div');
+      div.className = 'dica-item';
+      div.innerHTML = `<p>${dica.texto}</p>`;
+      this.dicasList.appendChild(div);
+    });
+    
+    this.dicasArea.style.display = dicas.length > 0 ? 'block' : 'none';
+  }
+  
+  abrirDesafio() {
+    if (this.desafiosDisponiveis.length === 0) {
+      alert('🎉 Parabéns! Você completou todos os desafios desta entrevista!');
+      return;
+    }
+    
+    this.desafioAtual = this.desafiosDisponiveis[0];
+    this.respostaSelecionada = null;
+    
+    // Preencher modal
+    if (this.desafioDisciplina) {
+      this.desafioDisciplina.textContent = `📚 Disciplina: ${this.desafioAtual.disciplina}`;
+    }
+    
+    if (this.desafioPergunta) {
+      this.desafioPergunta.textContent = this.desafioAtual.pergunta;
+    }
+    
+    // Criar opções
+    if (this.desafioOpcoes) {
+      this.desafioOpcoes.innerHTML = '';
+      this.desafioAtual.opcoes.forEach((opcao, index) => {
+        const div = document.createElement('div');
+        div.className = 'opcao-item';
+        
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'resposta';
+        radio.value = String.fromCharCode(65 + index); // A, B, C, D
+        radio.id = `opcao-${index}`;
+        radio.addEventListener('change', () => {
+          this.respostaSelecionada = radio.value;
+          if (this.btnConfirmarResposta) {
+            this.btnConfirmarResposta.disabled = false;
+          }
+        });
+        
+        const label = document.createElement('label');
+        label.htmlFor = `opcao-${index}`;
+        label.textContent = opcao;
+        
+        div.appendChild(radio);
+        div.appendChild(label);
+        this.desafioOpcoes.appendChild(div);
+      });
+    }
+    
+    // Resetar áreas
+    if (this.resultadoArea) {
+      this.resultadoArea.style.display = 'none';
+    }
+    if (this.btnConfirmarResposta) {
+      this.btnConfirmarResposta.disabled = true;
+    }
+    
+    // Mostrar modal
+    if (this.modalDesafio) {
+      this.modalDesafio.style.display = 'flex';
+    }
+  }
+  
+  fecharModal() {
+    if (this.modalDesafio) {
+      this.modalDesafio.style.display = 'none';
+    }
+  }
+  
+  async confirmarResposta() {
+    if (!this.respostaSelecionada || !this.desafioAtual) return;
+    
+    try {
+      const res = await fetch('/api/desafios/responder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          desafio_id: this.desafioAtual.id,
+          resposta: this.respostaSelecionada
+        })
+      });
+      
+      const data = await res.json();
+      
+      // Mostrar resultado
+      if (this.resultadoConteudo) {
+        if (data.sucesso) {
+          this.resultadoConteudo.innerHTML = `
+            <div class="resultado-sucesso">
+              <h3>✅ Correto!</h3>
+              <p>${data.explicacao}</p>
+              <div class="recompensa">
+                ${data.dica_texto}
+              </div>
+            </div>
+          `;
+        } else {
+          this.resultadoConteudo.innerHTML = `
+            <div class="resultado-erro">
+              <h3>❌ Incorreto</h3>
+              <p><strong>Resposta correta:</strong> ${data.resposta_correta}</p>
+              <p>${data.explicacao}</p>
+              <p class="dica-erro">💡 Tente novamente! Você pode responder este desafio mais tarde.</p>
+            </div>
+          `;
+        }
+      }
+      
+      if (this.resultadoArea) {
+        this.resultadoArea.style.display = 'block';
+      }
+      
+      // Esconder botão de confirmar
+      if (this.btnConfirmarResposta) {
+        this.btnConfirmarResposta.style.display = 'none';
+      }
+      
+      // Recarregar desafios se acertou
+      if (data.sucesso && this.currentEntity) {
+        await this.carregarDesafios(this.currentEntity.id);
+      }
+      
+    } catch (error) {
+      console.error('Erro ao confirmar resposta:', error);
+      alert('Erro ao processar resposta. Tente novamente.');
+    }
+  }
+  
+  proximoDesafio() {
+    this.fecharModal();
+    
+    // Se ainda há desafios, abrir próximo
+    if (this.desafiosDisponiveis.length > 0) {
+      setTimeout(() => this.abrirDesafio(), 300);
+    }
+  }
+  
+  mostrarEnigma(enigma) {
+    // Criar modal para enigma
+    const enigmaModal = document.createElement('div');
+    enigmaModal.className = 'modal-enigma';
+    enigmaModal.innerHTML = `
+      <div class="modal-enigma-content">
+        <div class="enigma-header">
+          <h2>🔐 ${enigma.titulo}</h2>
+          <button class="close-enigma">×</button>
+        </div>
+        <div class="enigma-body">
+          <p class="enigma-contexto">${enigma.contexto}</p>
+          <h3 class="enigma-pergunta">${enigma.pergunta}</h3>
+          <div class="enigma-opcoes">
+            ${enigma.opcoes.map((opcao, idx) => `
+              <label class="enigma-opcao">
+                <input type="radio" name="enigma_resposta" value="${String.fromCharCode(65 + idx)}">
+                <span>${opcao}</span>
+              </label>
+            `).join('')}
+          </div>
+          <button class="btn-confirmar-enigma">Confirmar Resposta</button>
+        </div>
+        <div class="enigma-resultado" style="display: none;"></div>
+      </div>
+    `;
+    
+    document.body.appendChild(enigmaModal);
+    
+    // Event listeners
+    enigmaModal.querySelector('.close-enigma').addEventListener('click', () => {
+      enigmaModal.remove();
+    });
+    
+    enigmaModal.querySelector('.btn-confirmar-enigma').addEventListener('click', async () => {
+      const resposta = enigmaModal.querySelector('input[name="enigma_resposta"]:checked');
+      if (!resposta) {
+        alert('Por favor, selecione uma resposta!');
+        return;
+      }
+      
+      await this.responderEnigma(enigma.id, resposta.value, enigmaModal);
+    });
+  }
+  
+  async responderEnigma(enigma_id, resposta, modal) {
+    try {
+      const res = await fetch('/api/enigmas/responder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enigma_id, resposta })
+      });
+      
+      const data = await res.json();
+      
+      const resultadoDiv = modal.querySelector('.enigma-resultado');
+      
+      if (data.sucesso) {
+        resultadoDiv.innerHTML = `
+          <div class="enigma-sucesso">
+            <h3>🎉 Correto!</h3>
+            <p>${data.explicacao}</p>
+            <p class="entidade-desbloqueada">✨ Desbloqueado: ${data.entidade_desbloqueada.nome}</p>
+            <button class="btn-continuar">Continuar Investigação</button>
+          </div>
+        `;
+        
+        // Atualizar entidades
+        if (data.entities) {
+          this.renderEntities(data.entities);
+          this.updateExcaliburActors(data.entities);
+        }
+        
+        resultadoDiv.querySelector('.btn-continuar').addEventListener('click', () => {
+          modal.remove();
+        });
+      } else {
+        resultadoDiv.innerHTML = `
+          <div class="enigma-erro">
+            <h3>❌ Incorreto</h3>
+            <p>${data.explicacao}</p>
+            <button class="btn-tentar-novamente">Tentar Novamente</button>
+          </div>
+        `;
+        
+        resultadoDiv.querySelector('.btn-tentar-novamente').addEventListener('click', () => {
+          resultadoDiv.style.display = 'none';
+          modal.querySelector('.enigma-body').style.display = 'block';
+        });
+      }
+      
+      modal.querySelector('.enigma-body').style.display = 'none';
+      resultadoDiv.style.display = 'block';
+      
+    } catch (error) {
+      console.error('Erro ao responder enigma:', error);
+      alert('Erro ao processar resposta. Tente novamente.');
+    }
   }
 }
 

@@ -254,14 +254,14 @@ fosse apenas algas, mas quando analisamos...
 Não é mercúrio comum de garimpo. É algo industrial, 
 usado para processar Coltan - aquele mineral de 
 celulares. Mas não há minas oficiais ali! Eu contei 
-isso à Clara e ela... ela foi investigar o Valdemar. 
+isso ao Gian e ele... ele foi investigar o Valdemar. 
 [olha ao redor nervoso] Desde então, tenho recebido 
 ameaças.
 
 👨‍🎓 Grupo: Quem está ameaçando você?
 
 👨‍🔬 Dr. Arnaldo: [sussurrando] Não sei ao certo, 
-mas Clara mencionou um "Homem de Terno" que apareceu 
+mas o Gian mencionou um "Homem de Terno" que apareceu 
 na fazenda. Alguém de Brasília. Olha, você precisa 
 falar com o Valdemar. Ele está escondendo algo. 
 Aquela fazenda não é o que parece ser...
