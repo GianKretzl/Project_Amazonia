@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, jsonify, request, session
 from dotenv import load_dotenv
+from datetime import datetime
 import entidades
 
 load_dotenv()
@@ -21,10 +22,42 @@ def create_app():
     def ensure_session():
         if 'pistas' not in session:
             session['pistas'] = []
+        if 'grupo' not in session:
+            session['grupo'] = None
+        if 'integrantes' not in session:
+            session['integrantes'] = []
 
     @app.route('/')
+    def login():
+        # Página de login é a primeira
+        return render_template('login.html')
+
+    @app.route('/intro')
     def index():
+        # Página inicial após login
         return render_template('index.html')
+
+    @app.route('/api/login', methods=['POST'])
+    def api_login():
+        data = request.get_json() or {}
+        grupo = data.get('grupo', '').strip()
+        integrantes = data.get('integrantes', [])
+        
+        if not grupo or len(integrantes) == 0 or len(integrantes) > 6:
+            return jsonify({'success': False, 'error': 'Dados inválidos'}), 400
+        
+        session['grupo'] = grupo
+        session['integrantes'] = integrantes
+        session['login_timestamp'] = str(datetime.now())
+        
+        return jsonify({'success': True, 'grupo': grupo, 'integrantes': integrantes})
+
+    @app.route('/api/grupo-info')
+    def api_grupo_info():
+        return jsonify({
+            'grupo': session.get('grupo'),
+            'integrantes': session.get('integrantes', [])
+        })
 
     @app.route('/briefing')
     def briefing():

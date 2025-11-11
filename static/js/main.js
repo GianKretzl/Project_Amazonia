@@ -1,202 +1,81 @@
+// ============================================
+// PROJETO SOMBRA ROXA - Main Script
+// ============================================
+
+// Efeitos para a página inicial
+if (document.querySelector('.terminal-body')) {
+  // Animação de digitação para textos
+  document.querySelectorAll('.typing-text').forEach(element => {
+    const text = element.dataset.text || element.textContent;
+    element.textContent = '';
+    let i = 0;
+    
+    const typeWriter = () => {
+      if (i < text.length) {
+        element.textContent += text.charAt(i);
+        i++;
+        setTimeout(typeWriter, 50);
+      }
+    };
+    
+    // Aguardar animação de fade-in antes de iniciar digitação
+    const delay = parseFloat(getComputedStyle(element.closest('.terminal-line')).animationDelay) * 1000 || 0;
+    setTimeout(typeWriter, delay + 500);
+  });
+}
+
+// Sistema de entrevistas (se estiver na página de interview)
+if (document.getElementById('entities-grid')) {
+  // Import do sistema de entrevistas
+  const script = document.createElement('script');
+  script.src = document.querySelector('[src*="main.js"]')?.src.replace('main.js', 'interview.js') || '/static/js/interview.js';
+  document.body.appendChild(script);
+}
+
+// Efeitos visuais globais
 document.addEventListener('DOMContentLoaded', () => {
-  const entitiesDiv = document.getElementById('entities');
-  const chatArea = document.getElementById('chat-area');
-  const chatLog = document.getElementById('chat-log');
-  const entityName = document.getElementById('entity-name');
-  const chatForm = document.getElementById('chat-form');
-  const chatInput = document.getElementById('chat-input');
-
-  let currentEntity = null;
-
-  // manter último estado para detectar desbloqueios
-  let previousEntitiesState = {};
-  // map de imagens por id (pré-carregado)
-  window.entityImages = window.entityImages || {};
-  const entityImagePaths = {
-    'biologo': '/static/img/biologo.svg',
-    'fazendeiro': '/static/img/fazendeiro.svg',
-    'lider_indigena': '/static/img/lider_indigena.svg',
-    'politico': '/static/img/politico.svg'
-  };
-  // pré-carregar imagens
-  Object.entries(entityImagePaths).forEach(([id, path]) => {
-    const img = new Image();
-    img.src = path;
-    window.entityImages[id] = img;
+  // Adicionar efeito de hover em botões
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+    });
+    
+    btn.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
   });
 
-  async function loadEntities() {
-    const res = await fetch('/api/entities');
-    const data = await res.json();
-    entitiesDiv.innerHTML = '';
-    // posicionamento simples para a cena: espaçar actors horizontalmente
-    const total = data.entities.length;
-    const width = 760; // espaço dentro do container
-    let idx = 0;
-    data.entities.forEach(e => {
-      const card = document.createElement('div');
-      card.className = 'entity-card';
-      card.innerHTML = `<strong>${e.nome}</strong> <em>(${e.disciplina})</em>`;
-      if (!e.liberado) {
-        card.classList.add('locked');
-        card.innerHTML += ' <span class="lock">🔒</span>';
-      } else {
-        card.addEventListener('click', () => selectEntity(e));
-      }
-      entitiesDiv.appendChild(card);
-
-      // atualizar/ criar actor na cena Excalibur (se disponível)
-      try {
-        if (window.exEngine) {
-          const Ex = window.ex;
-          const Actor = Ex.Actor;
-          const Vector = Ex.Vector;
-          const Color = Ex.Color;
-          const x = 40 + Math.round((idx / Math.max(1, total - 1)) * width);
-          const y = 80;
-          // se já existe, atualiza cor/estado
-          if (window.entityActors && window.entityActors[e.id]) {
-            const actor = window.entityActors[e.id];
-            // brincar com cor: desbloqueado -> verde mais vivo
-            actor.color = e.liberado ? Color.fromHex('#4caf50') : Color.fromHex('#9e9e9e');
-            // se acabou de ser desbloqueado -> animar
-            const prev = previousEntitiesState[e.id];
-            if (e.liberado && prev && !prev.liberado) {
-              // pulse
-              actor.actions.scaleTo(1.4, 1.4, 200).then(() => actor.actions.scaleTo(1, 1, 200));
-            }
-            actor.pos = new Vector(x, y);
-              } else {
-                const actor = new Actor({ pos: new Vector(x, y), width: 64, height: 64 });
-                actor.color = e.liberado ? Color.fromHex('#4caf50') : Color.fromHex('#9e9e9e');
-                actor.anchor.setTo(0.5, 0.5);
-                // desenhar imagem (sprite) se carregada; fallback para label
-                const ent = e; // capturar
-                actor.on('postdraw', (ctx) => {
-                  try {
-                    const img = window.entityImages[ent.id];
-                    if (img && img.complete) {
-                      const w = 48, h = 48;
-                      const dx = Math.round(actor.pos.x - w / 2);
-                      const dy = Math.round(actor.pos.y - h / 2) - 6;
-                      ctx.drawImage(img, dx, dy, w, h);
-                    } else {
-                      // fallback: círculo
-                      ctx.save();
-                      ctx.fillStyle = '#999';
-                      ctx.beginPath();
-                      ctx.arc(actor.pos.x, actor.pos.y, 24, 0, Math.PI * 2);
-                      ctx.fill();
-                      ctx.restore();
-                    }
-                    // label
-                    ctx.save();
-                    ctx.fillStyle = '#000';
-                    ctx.font = '12px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(ent.nome.split(' ')[0], actor.pos.x, actor.pos.y + 48);
-                    ctx.restore();
-                  } catch (err) {
-                    // ignorar erros de desenho
-                  }
-                });
-                window.scene.add(actor);
-                window.entityActors = window.entityActors || {};
-                window.entityActors[e.id] = actor;
-              }
-        }
-      } catch (err) {
-        // falha em animacao não é crítica
-        console.log('Excalibur update ignorado:', err);
-      }
-
-      idx += 1;
-    });
-
-    // atualizar estado anterior
-    previousEntitiesState = {};
-    data.entities.forEach(e => previousEntitiesState[e.id] = { liberado: e.liberado });
-  }
-
-  function selectEntity(e) {
-    currentEntity = e;
-    entityName.textContent = e.nome + ' — ' + e.disciplina;
-    chatArea.style.display = 'block';
-    chatLog.innerHTML = '';
-  }
-
-  chatForm.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    if (!currentEntity) return alert('Selecione uma entidade desbloqueada primeiro.');
-    const message = chatInput.value.trim();
-    if (!message) return;
-    appendMessage('Você', message);
-    chatInput.value = '';
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({entity_id: currentEntity.id, message})
-    });
-    const data = await res.json();
-    appendMessage(currentEntity.nome, data.reply);
-    if (data.pistas_encontradas && data.pistas_encontradas.length) {
-      data.pistas_encontradas.forEach(p => showCollectButton(p));
+  // Easter egg: Konami Code
+  let konamiCode = [];
+  const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  
+  document.addEventListener('keydown', (e) => {
+    konamiCode.push(e.key);
+    konamiCode = konamiCode.slice(-10);
+    
+    if (konamiCode.join(',') === konamiPattern.join(',')) {
+      unlockEasterEgg();
     }
   });
-
-  function appendMessage(who, text) {
-    const p = document.createElement('p');
-    p.innerHTML = `<strong>${who}:</strong> ${text}`;
-    chatLog.appendChild(p);
-    chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
-  function showCollectButton(pista) {
-    const btn = document.createElement('button');
-    btn.textContent = `Coletar pista: ${pista}`;
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      const res = await fetch('/api/collect', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({pista})
-      });
-      const data = await res.json();
-      appendMessage('Sistema', `Pista '${pista}' adicionada ao dossiê.`);
-      await loadEntities();
-    });
-    chatLog.appendChild(btn);
-  }
-
-  // iniciar
-  loadEntities();
-
-  // --- Inicializar Excalibur: criar engine e cena, anexar canvas ao container ---
-  try {
-    const Ex = window.ex; // Excalibur exportado via <script src>
-    if (Ex) {
-      const { Engine, Scene, Actor, Vector, Color } = Ex;
-      const container = document.getElementById('excalibur-container');
-      const canvas = document.createElement('canvas');
-      canvas.style.maxWidth = '100%';
-      canvas.width = 800;
-      canvas.height = 160;
-      container.innerHTML = '';
-      container.appendChild(canvas);
-
-      const engine = new Engine({ canvasElement: canvas, width: canvas.width, height: canvas.height });
-      const scene = new Scene();
-      engine.addScene('main', scene);
-      window.exEngine = engine;
-      window.scene = scene;
-      engine.start();
-
-      // fundo
-      const bg = new Actor({ pos: new Vector(canvas.width / 2, canvas.height / 2), width: canvas.width, height: canvas.height });
-      bg.color = Color.fromHex('#e8f5e9');
-      scene.add(bg);
-    }
-  } catch (e) {
-    console.log('Excalibur não inicializado (ok no protótipo):', e);
+  
+  function unlockEasterEgg() {
+    const audio = new Audio('data:audio/wav;base64,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');
+    audio.play().catch(() => {});
+    
+    document.body.style.animation = 'rainbow 2s linear infinite';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes rainbow {
+        0% { filter: hue-rotate(0deg); }
+        100% { filter: hue-rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    setTimeout(() => {
+      document.body.style.animation = '';
+      alert('🎮 Modo Desenvolvedor Ativado!\n\nTodas as entidades foram desbloqueadas temporariamente.');
+    }, 2000);
   }
 });

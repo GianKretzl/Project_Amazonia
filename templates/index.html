@@ -3,15 +3,128 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Encruzilhada da Amazônia</title>
+    <title>Projeto Sombra Roxa</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
-  <body>
-    <h1>Projeto: Encruzilhada da Amazônia</h1>
-    <p>Bem-vindo ao simulador de investigação.</p>
-    <ul>
-      <li><a href="{{ url_for('briefing') }}">Briefing da Missão</a></li>
-      <li><a href="{{ url_for('interview') }}">Sala de Entrevistas</a></li>
-    </ul>
+  <body class="terminal-body intro-body">
+    <!-- Background de imagem revelando progressivamente -->
+    <div class="reveal-background">
+      <div class="reveal-overlay"></div>
+    </div>
+
+    <div class="terminal-container">
+      <div class="terminal-header">
+        <span class="terminal-title">SISTEMA DE INVESTIGAÇÃO - GIAN KRETZL</span>
+        <span class="terminal-status">● ONLINE</span>
+      </div>
+      
+      <!-- Informação do Grupo (se logado) -->
+      <div id="grupo-info" class="grupo-info-banner" style="display: none;">
+        <span class="grupo-label">Grupo:</span>
+        <span id="grupo-nome-display" class="grupo-nome"></span>
+        <span class="grupo-integrantes-label">Integrantes:</span>
+        <span id="grupo-integrantes-display" class="grupo-integrantes"></span>
+      </div>
+
+      <div class="terminal-content">
+        <div class="terminal-line">
+          <span class="prompt">system@notebook:~$</span> <span class="typing-text" data-text="Inicializando sistema de entrevistas..."></span>
+        </div>
+        <div class="terminal-line delay-1">
+          <span class="prompt">system@notebook:~$</span> <span class="typing-text" data-text="Verificando arquivos da jornalista..."></span>
+        </div>
+        <div class="terminal-line delay-2">
+          <span class="status-ok">[OK]</span> <span>Sistema operacional</span>
+        </div>
+        <div class="terminal-line delay-3">
+          <span class="status-warning">[AVISO]</span> <span>Última sessão: 3 dias atrás - Localização: Amazônia Legal</span>
+        </div>
+        <div class="terminal-line delay-4">
+          <span class="status-error">[CRÍTICO]</span> <span>Proprietária do sistema: DESAPARECIDA</span>
+        </div>
+        
+        <div class="terminal-line delay-5">
+          <br>
+          <div class="glitch-text" data-text="🎮 PROJETO SOMBRA ROXA">🎮 PROJETO SOMBRA ROXA</div>
+        </div>
+        
+        <div class="terminal-line delay-6">
+          <p class="story-text">
+            Você é um <strong>estagiário de jornalismo</strong> que acabou de encontrar o notebook de<br>
+            <span class="highlight-purple">Gian Kretzl</span>, uma jornalista investigativa desaparecida na Amazônia.<br><br>
+            
+            No sistema dela, você descobriu um arquivo de áudio corrompido...<br>
+            Sua última mensagem antes de desaparecer.
+          </p>
+        </div>
+
+        <div class="terminal-line delay-7">
+          <div class="audio-corrupted">
+            <div class="audio-wave"></div>
+            <p class="audio-text">
+              "Eu... <span class="static">[estática]</span>... consegui. Não é só desmatamento.<br>
+              É algo maior. Eles estão usando a 'Fazenda Nova Fronteira' como fachada.<br>
+              O Dr. Arnaldo estava certo sobre o rio... <span class="static">[som de helicóptero]</span><br>
+              a <span class="highlight-purple">'Sombra Roxa'</span> é real. Eles estão vindo.<br>
+              A chave está no... <span class="static">[estática]</span>... no mapa do Pajé.<br>
+              Não deixe eles vencerem. O sistema de entrevistas...<br>
+              <span class="static">[estática]</span>... confie apenas no que você conectar..."
+            </p>
+            <p class="transmission-end">[TRANSMISSÃO ENCERRADA]</p>
+          </div>
+        </div>
+
+        <div class="terminal-line delay-8">
+          <div class="mission-box">
+            <h2>🎯 SUA MISSÃO</h2>
+            <ul>
+              <li>✓ Descobrir o que é a "Sombra Roxa"</li>
+              <li>✓ Entrevistar as fontes de Clara</li>
+              <li>✓ Conectar as pistas das 3 disciplinas</li>
+              <li>✓ Expor a conspiração</li>
+              <li>✓ Descobrir o que aconteceu com Clara</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="terminal-line delay-9">
+          <div class="cta-buttons">
+            <a href="{{ url_for('briefing') }}" class="btn btn-primary">
+              <span class="btn-icon">📋</span> VER BRIEFING COMPLETO
+            </a>
+            <a href="{{ url_for('interview') }}" class="btn btn-secondary">
+              <span class="btn-icon">🎙️</span> ENTRAR NA SALA DE ENTREVISTAS
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+      // Carregar informações do grupo
+      fetch('/api/grupo-info')
+        .then(res => res.json())
+        .then(data => {
+          if (data.grupo) {
+            const banner = document.getElementById('grupo-info');
+            document.getElementById('grupo-nome-display').textContent = data.grupo;
+            document.getElementById('grupo-integrantes-display').textContent = data.integrantes.join(', ');
+            banner.style.display = 'flex';
+          }
+        })
+        .catch(err => console.log('Sem informação de grupo'));
+
+      // Efeito de revelação progressiva do background
+      setTimeout(() => {
+        const overlay = document.querySelector('.reveal-overlay');
+        if (overlay) {
+          overlay.classList.add('revealing');
+        }
+      }, 1000);
+    </script>
   </body>
 </html>

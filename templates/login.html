@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Projeto Sombra Roxa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  </head>
+  <body class="login-body">
+    <div class="login-container">
+      <!-- Logo/Header -->
+      <div class="login-header">
+        <div class="glitch-text login-title" data-text="🎮 PROJETO SOMBRA ROXA">🎮 PROJETO SOMBRA ROXA</div>
+        <p class="login-subtitle">Sistema de Investigação Classificado</p>
+      </div>
+
+      <!-- Formulário de Login -->
+      <div class="login-card">
+        <div class="card-header">
+          <h2>🔐 ACESSO AO SISTEMA</h2>
+          <p class="access-info">Identifique seu grupo de investigação</p>
+        </div>
+
+        <form id="login-form" class="login-form">
+          <!-- Nome do Grupo -->
+          <div class="form-group">
+            <label for="grupo-nome">
+              <span class="label-icon">👥</span>
+              <span class="label-text">Nome do Grupo</span>
+            </label>
+            <input 
+              type="text" 
+              id="grupo-nome" 
+              name="grupo-nome" 
+              class="form-input"
+              placeholder="Ex: Investigadores da Amazônia"
+              required
+              maxlength="50"
+            >
+          </div>
+
+          <!-- Integrantes -->
+          <div class="form-group">
+            <label>
+              <span class="label-icon">🎓</span>
+              <span class="label-text">Integrantes (máximo 6)</span>
+            </label>
+            
+            <div id="integrantes-list">
+              <div class="integrante-input-group">
+                <span class="integrante-number">1.</span>
+                <input 
+                  type="text" 
+                  name="integrante[]" 
+                  class="form-input integrante-input"
+                  placeholder="Nome completo do integrante"
+                  required
+                  maxlength="60"
+                >
+              </div>
+            </div>
+
+            <button type="button" id="add-integrante" class="btn-add">
+              ➕ Adicionar Integrante
+            </button>
+            <p class="helper-text">Mínimo 1, máximo 6 integrantes</p>
+          </div>
+
+          <!-- Botão de Submit -->
+          <button type="submit" class="btn-submit">
+            <span class="btn-icon">🚀</span>
+            <span class="btn-text">INICIAR INVESTIGAÇÃO</span>
+          </button>
+        </form>
+
+        <!-- Informação de Sessão -->
+        <div class="session-info">
+          <p>💾 Seus dados serão salvos durante esta sessão</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>⚠️ Sistema de acesso restrito - Projeto Gian Kretzl</p>
+      </div>
+    </div>
+
+    <script>
+      // Gerenciamento de integrantes
+      let integranteCount = 1;
+      const maxIntegrantes = 6;
+
+      document.getElementById('add-integrante').addEventListener('click', function() {
+        if (integranteCount >= maxIntegrantes) {
+          alert('Máximo de 6 integrantes atingido!');
+          return;
+        }
+
+        integranteCount++;
+        const integrantesDiv = document.getElementById('integrantes-list');
+        
+        const newInput = document.createElement('div');
+        newInput.className = 'integrante-input-group';
+        newInput.innerHTML = `
+          <span class="integrante-number">${integranteCount}.</span>
+          <input 
+            type="text" 
+            name="integrante[]" 
+            class="form-input integrante-input"
+            placeholder="Nome completo do integrante"
+            maxlength="60"
+          >
+          <button type="button" class="btn-remove" onclick="removeIntegrante(this)">✕</button>
+        `;
+        
+        integrantesDiv.appendChild(newInput);
+
+        // Atualizar botão se chegou no máximo
+        if (integranteCount >= maxIntegrantes) {
+          this.disabled = true;
+          this.textContent = '✓ Máximo de integrantes atingido';
+        }
+      });
+
+      function removeIntegrante(btn) {
+        btn.parentElement.remove();
+        integranteCount--;
+        
+        // Reabilitar botão de adicionar
+        const addBtn = document.getElementById('add-integrante');
+        addBtn.disabled = false;
+        addBtn.innerHTML = '➕ Adicionar Integrante';
+        
+        // Renumerar integrantes
+        const inputs = document.querySelectorAll('.integrante-input-group');
+        inputs.forEach((input, index) => {
+          input.querySelector('.integrante-number').textContent = (index + 1) + '.';
+        });
+      }
+
+      // Submit do formulário
+      document.getElementById('login-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const grupoNome = document.getElementById('grupo-nome').value.trim();
+        const integranteInputs = document.querySelectorAll('input[name="integrante[]"]');
+        const integrantes = Array.from(integranteInputs)
+          .map(input => input.value.trim())
+          .filter(nome => nome !== '');
+
+        if (integrantes.length === 0) {
+          alert('Adicione pelo menos 1 integrante!');
+          return;
+        }
+
+        // Salvar na sessão via API
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              grupo: grupoNome,
+              integrantes: integrantes
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Redirecionar para a página inicial com efeito de loading
+            showLoadingAndRedirect();
+          } else {
+            alert('Erro ao fazer login. Tente novamente.');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro de conexão. Tente novamente.');
+        }
+      });
+
+      function showLoadingAndRedirect() {
+        const form = document.querySelector('.login-card');
+        form.innerHTML = `
+          <div class="loading-screen">
+            <div class="loading-spinner"></div>
+            <h2>Acessando sistema de Gian Kretzl...</h2>
+            <div class="loading-bar">
+              <div class="loading-progress"></div>
+            </div>
+            <p class="loading-text">Carregando arquivos confidenciais...</p>
+          </div>
+        `;
+
+        // Simular carregamento
+        setTimeout(() => {
+          window.location.href = '/intro';
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>

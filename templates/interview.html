@@ -3,27 +3,87 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sala de Entrevistas - Encruzilhada</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Sala de Entrevistas - Projeto Sombra Roxa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
-  <body>
-    <h1>Sala de Entrevistas</h1>
-    <div id="entities"></div>
-    <div id="excalibur-container" style="width:100%; max-width:900px; height:160px; margin:12px 0; border:1px solid #ddd;
-         border-radius:6px; background:#f3fff4; display:flex; align-items:center; justify-content:center;">
-      <!-- Canvas Excalibur será inserido aqui pelo script -->
+  <body class="interview-body">
+    <div class="interview-container">
+      <!-- Header -->
+      <div class="interview-header">
+        <div class="header-left">
+          <h1>🎙️ SALA DE ENTREVISTAS</h1>
+          <p class="subtitle">Sistema de Investigação - Gian Kretzl</p>
+        </div>
+        <div class="header-right">
+          <div class="pistas-counter">
+            <span class="counter-label">Pistas Coletadas:</span>
+            <span id="pistas-count" class="counter-value">0</span>
+          </div>
+          <a href="{{ url_for('briefing') }}" class="btn-small">📋 Briefing</a>
+        </div>
+      </div>
+
+      <!-- Dossiê de Pistas -->
+      <div class="dossier-panel" id="dossier-panel">
+        <h3>📂 DOSSIÊ DE PISTAS</h3>
+        <div id="pistas-list" class="pistas-list">
+          <p class="empty-state">Nenhuma pista coletada ainda...</p>
+        </div>
+      </div>
+
+      <!-- Entidades Disponíveis -->
+      <div class="entities-section">
+        <h2>👥 FONTES DA INVESTIGAÇÃO</h2>
+        <div id="entities-grid" class="entities-grid">
+          <!-- Preenchido via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Visualização Excalibur -->
+      <div class="excalibur-section">
+        <h2>🎮 VISUALIZAÇÃO DO CASO</h2>
+        <div id="excalibur-container" class="excalibur-canvas-wrapper">
+          <!-- Canvas será inserido aqui -->
+        </div>
+      </div>
+
+      <!-- Chat de Entrevista -->
+      <div id="chat-area" class="chat-area" style="display:none">
+        <div class="chat-header">
+          <div class="chat-entity-info">
+            <span id="entity-emoji" class="entity-emoji"></span>
+            <div>
+              <h2 id="entity-name" class="entity-name"></h2>
+              <p id="entity-discipline" class="entity-discipline"></p>
+            </div>
+          </div>
+          <button id="close-chat" class="btn-close">✕</button>
+        </div>
+
+        <div id="chat-log" class="chat-log">
+          <!-- Mensagens aparecem aqui -->
+        </div>
+
+        <form id="chat-form" class="chat-form">
+          <input 
+            id="chat-input" 
+            type="text"
+            autocomplete="off" 
+            placeholder="Digite sua pergunta..." 
+            class="chat-input"
+          >
+          <button type="submit" class="btn-send">Enviar</button>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="interview-footer">
+        <p>💡 <strong>Dica:</strong> Faça perguntas específicas. Mencione nomes, locais e conceitos para obter mais informações.</p>
+      </div>
     </div>
 
-    <div id="chat-area" style="display:none">
-      <h2 id="entity-name"></h2>
-      <div id="chat-log"></div>
-      <form id="chat-form">
-        <input id="chat-input" autocomplete="off" placeholder="Faça uma pergunta..." style="width:70%">
-        <button type="submit">Enviar</button>
-      </form>
-    </div>
-
-  <script src="https://unpkg.com/excalibur/dist/excalibur.min.js"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="https://unpkg.com/excalibur@0.29.3/dist/excalibur.min.js"></script>
+    <script src="{{ url_for('static', filename='js/interview.js') }}"></script>
   </body>
 </html>

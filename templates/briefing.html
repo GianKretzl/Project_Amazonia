@@ -3,12 +3,116 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Briefing - Encruzilhada da Amazônia</title>
+    <title>Briefing - Projeto Sombra Roxa</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   </head>
-  <body>
-    <h1>Briefing da Missão</h1>
-    <p>Você é o estagiário que encontrou o notebook da jornalista Clara Bastos. Sua missão: montar um dossiê para expor a crise na Amazônia. Entrevistar entidades, coletar pistas e conectar as disciplinas.</p>
-  <p><a href="{{ url_for('interview') }}">Entrar na Sala de Entrevistas</a></p>
+  <body class="briefing-body">
+    <div class="briefing-container">
+      <div class="briefing-header">
+        <h1>📋 BRIEFING DA MISSÃO</h1>
+        <div class="classified-stamp">URGENTE</div>
+      </div>
+
+      <div class="briefing-content">
+        <section class="briefing-section">
+          <h2>👤 QUEM VOCÊ É</h2>
+          <p>Você é um <strong>estagiário de jornalismo investigativo</strong>. Você encontrou o notebook pessoal de <span class="highlight-purple">Gian Kretzl</span>, uma renomada jornalista que desapareceu há 3 dias durante uma investigação na Amazônia Legal.</p>
+        </section>
+
+        <section class="briefing-section">
+          <h2>🔍 O MISTÉRIO</h2>
+          <p>Clara estava investigando algo chamado <strong class="highlight-purple">"Sombra Roxa"</strong> - uma anomalia misteriosa conectada a:</p>
+          <ul class="mystery-list">
+            <li>🧪 Uma mancha química no rio (Ciências)</li>
+            <li>🗺️ A Fazenda Nova Fronteira (Geografia)</li>
+            <li>📜 Uma terra ancestral indígena (História)</li>
+          </ul>
+          <p>Sua última mensagem de áudio foi cortada por interferência de helicóptero...</p>
+        </section>
+
+        <section class="briefing-section">
+          <h2>🎯 OBJETIVOS</h2>
+          <div class="objectives-grid">
+            <div class="objective-card">
+              <div class="objective-number">1</div>
+              <div class="objective-text">
+                <h3>Ato I: A Pista Científica</h3>
+                <p>Entrevistar <strong>👨‍🔬 Dr. Arnaldo Silva</strong> (Biólogo)</p>
+                <p class="hint">Pergunte sobre a "Sombra Roxa"</p>
+              </div>
+            </div>
+            <div class="objective-card locked">
+              <div class="objective-number">2</div>
+              <div class="objective-text">
+                <h3>Ato II: A Fachada</h3>
+                <p>Entrevistar <strong>🧑‍🌾 "Seu" Valdemar</strong> (Fazendeiro)</p>
+                <p class="hint">Questione sobre a fazenda e o lucro dela</p>
+              </div>
+            </div>
+            <div class="objective-card locked">
+              <div class="objective-number">3</div>
+              <div class="objective-text">
+                <h3>Ato III: O Mapa</h3>
+                <p>Entrevistar <strong>🌿 Pajé Yakamu</strong> (Líder Indígena)</p>
+                <p class="hint">Descubra o segredo do "Mapa do Coltan"</p>
+              </div>
+            </div>
+            <div class="objective-card locked">
+              <div class="objective-number">4</div>
+              <div class="objective-text">
+                <h3>Clímax: O Dossiê Final</h3>
+                <p>Confrontar <strong>🤵 ???</strong> (Secreto)</p>
+                <p class="hint">Use todas as pistas para expor a verdade</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="briefing-section">
+          <h2>🧩 COMO JOGAR</h2>
+          <div class="how-to-play">
+            <div class="step">
+              <span class="step-number">①</span>
+              <p><strong>Entreviste</strong> as entidades desbloqueadas</p>
+            </div>
+            <div class="step">
+              <span class="step-number">②</span>
+              <p><strong>Faça perguntas estratégicas</strong> para descobrir pistas</p>
+            </div>
+            <div class="step">
+              <span class="step-number">③</span>
+              <p><strong>Colete as pistas</strong> quando aparecerem</p>
+            </div>
+            <div class="step">
+              <span class="step-number">④</span>
+              <p><strong>Desbloqueie novas entidades</strong> conectando as informações</p>
+            </div>
+            <div class="step">
+              <span class="step-number">⑤</span>
+              <p><strong>Monte o dossiê completo</strong> para expor a conspiração</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="briefing-section warning-section">
+          <h2>⚠️ AVISO</h2>
+          <p class="warning-text">
+            Gian Kretzl desapareceu investigando essa história.<br>
+            Pessoas poderosas querem manter esse segredo enterrado.<br>
+            <strong>Cuidado com quem você confia. Questione tudo.</strong>
+          </p>
+        </section>
+
+        <div class="briefing-footer">
+          <a href="{{ url_for('interview') }}" class="btn btn-primary btn-large">
+            🎙️ INICIAR INVESTIGAÇÃO
+          </a>
+          <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            ← Voltar
+          </a>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
