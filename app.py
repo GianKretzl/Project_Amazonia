@@ -9,8 +9,16 @@ from simulated_ai import simulated_reply_improved
 from database import db
 import hashlib
 import secrets
+import unicodedata
 
 load_dotenv()
+
+def remover_acentos(texto):
+    """Remove acentos de um texto para facilitar comparação"""
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
 
 try:
     from openai import OpenAI
@@ -346,12 +354,18 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 # Converter underscore para espaço e verificar
                 pista_formatada = p.replace('_', ' ').lower()
                 
+                # Normalizar (remover acentos) para comparação mais flexível
+                pista_normalizada = remover_acentos(pista_formatada)
+                reply_normalizada = remover_acentos(reply_lower)
+                
                 # Verificar se a pista aparece com contexto suficiente (não só uma menção)
-                if pista_formatada in reply_lower:
+                # Aceita tanto com acento quanto sem acento
+                if pista_formatada in reply_lower or pista_normalizada in reply_normalizada:
                     # Contar quantas palavras da pista aparecem em frases completas
                     palavras_pista = pista_formatada.split()
                     if len(palavras_pista) >= 2 or len(reply_lower) > 100:  # Múltiplas palavras ou resposta longa
                         found.append(p)
+                        print(f"✅ Pista detectada: {p}")
 
         # NOTE: não coletamos automaticamente — o frontend pode pedir para "coletar" uma pista
         return jsonify({
