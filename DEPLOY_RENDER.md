@@ -79,6 +79,23 @@ O Render vai:
 
 Toda vez que fizer `git push origin main`, o Render redeploy automaticamente!
 
+## ⚠️ IMPORTANTE: Banco Zerado a Cada Deploy
+
+**Por padrão, o banco é ZERADO a cada deploy!**
+
+Isso é útil para:
+- ✅ Testes e demos sempre limpos
+- ✅ Desenvolvimento ativo
+
+**PORÉM:**
+- ❌ Todos os dados são perdidos a cada push
+- ❌ Usuários e progresso são apagados
+
+Para **DESABILITAR** em produção real:
+1. Edite `build.sh`
+2. Comente a seção "ZERAR banco de dados"
+3. Veja detalhes em `PRODUCAO.md`
+
 ## 🌐 Acessar Aplicação
 
 Após deploy, sua URL será algo como:
