@@ -1075,12 +1075,16 @@ Processamento de COLTAN - Columbita-Tantalita.
       });
     }
     
-    // Resetar áreas
+    // Resetar áreas COMPLETAMENTE
     if (this.resultadoArea) {
       this.resultadoArea.style.display = 'none';
     }
+    if (this.resultadoConteudo) {
+      this.resultadoConteudo.innerHTML = '';
+    }
     if (this.btnConfirmarResposta) {
       this.btnConfirmarResposta.disabled = true;
+      this.btnConfirmarResposta.style.display = 'inline-block'; // Garantir que está visível
     }
     
     // Mostrar modal
@@ -1155,6 +1159,19 @@ Processamento de COLTAN - Columbita-Tantalita.
   }
   
   proximoDesafio() {
+    // Resetar áreas antes de fechar
+    if (this.resultadoArea) {
+      this.resultadoArea.style.display = 'none';
+    }
+    if (this.resultadoConteudo) {
+      this.resultadoConteudo.innerHTML = '';
+    }
+    if (this.btnConfirmarResposta) {
+      this.btnConfirmarResposta.style.display = 'inline-block';
+      this.btnConfirmarResposta.disabled = true;
+    }
+    
+    // Fechar modal
     this.fecharModal();
     
     // Se ainda há desafios, abrir próximo
