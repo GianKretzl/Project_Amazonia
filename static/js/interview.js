@@ -229,6 +229,7 @@ class InterviewSystem {
     this.chatForm = document.getElementById('chat-form');
     this.chatInput = document.getElementById('chat-input');
     this.pistasCount = document.getElementById('pistas-count');
+    this.pistasCountDossie = document.getElementById('pistas-count-dossie');
     this.pistasList = document.getElementById('pistas-list');
     this.closeChat = document.getElementById('close-chat');
     
@@ -885,8 +886,12 @@ class InterviewSystem {
     // Atualizar array local de pistas coletadas
     this.pistasColetadas = pistas;
     
+    // Atualizar ambos os contadores
     if (this.pistasCount) {
       this.pistasCount.textContent = pistas.length;
+    }
+    if (this.pistasCountDossie) {
+      this.pistasCountDossie.textContent = pistas.length;
     }
     
     if (this.pistasList) {

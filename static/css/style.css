@@ -639,7 +639,7 @@ body {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-.dossier-panel {
+.dossier-panel, .dossie-pistas {
   background: var(--color-bg-card);
   padding: 20px;
   border-radius: 12px;
@@ -648,15 +648,31 @@ body {
   border-left: 4px solid var(--color-purple);
 }
 
-.dossier-panel h3 {
+.dossier-panel h3, .dossie-pistas h2 {
   color: var(--color-purple);
   margin-bottom: 12px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pistas-contador {
+  color: var(--color-text-dim);
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-family: var(--font-mono);
 }
 
 .pistas-list {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  min-height: 60px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px dashed var(--color-border);
 }
 
 .pista-badge {
@@ -668,6 +684,12 @@ body {
   font-weight: bold;
   box-shadow: var(--shadow-sm);
   animation: pistaAppear 0.5s ease-out;
+  transition: all 0.3s ease;
+}
+
+.pista-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.5);
 }
 
 @keyframes pistaAppear {
@@ -678,6 +700,10 @@ body {
 .empty-state {
   color: var(--color-text-dim);
   font-style: italic;
+  text-align: center;
+  width: 100%;
+  padding: 8px;
+  font-size: 13px;
 }
 
 .dossier-actions {
@@ -2743,6 +2769,28 @@ body {
 
 /* Responsividade para modal de pistas */
 @media (max-width: 768px) {
+  .dossie-pistas, .dossier-panel {
+    padding: 15px;
+  }
+  
+  .dossie-pistas h2 {
+    font-size: 16px;
+  }
+  
+  .pistas-contador {
+    font-size: 13px;
+  }
+  
+  .pistas-list {
+    gap: 8px;
+    padding: 10px;
+  }
+  
+  .pista-badge {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
   .modal-pista-content {
     max-width: 95%;
     margin: 10px;

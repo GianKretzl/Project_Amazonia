@@ -310,9 +310,9 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         contra_pergunta = None
         pistas_coletadas = db.get_pistas(session_id)
         
-        # Contra-pergunta apenas após 12 interações E ter coletado Sombra_Roxa E Gado_Não_Bebe_Rio
+        # Contra-pergunta apenas após 8 interações E ter coletado Sombra_Roxa E Gado_Não_Bebe_Rio
         # Isso garante que o jogador explorou a conversa antes da revelação crítica
-        if entity_id == 'biologo' and interaction_count >= 12:
+        if entity_id == 'biologo' and interaction_count >= 8:
             # Verificar se já fez a contra-pergunta
             resposta_anterior = db.get_contra_pergunta_feita(session_id, entity_id, 'coltan')
             

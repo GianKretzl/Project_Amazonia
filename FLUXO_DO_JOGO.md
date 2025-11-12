@@ -36,10 +36,11 @@ Sistema de investigação educacional em 3 atos, onde o jogador coleta pistas co
 2. Se já tem 3+ interações, contra-pergunta aparece automaticamente
 
 ### Enigma para Desbloquear Próximo Ato:
-**Título:** "O Rastro Químico"  
-**Requisitos:** Ter coletado `Química_Coltan` + `Sombra_Roxa`  
-**Pergunta:** "Se a anomalia química coltan foi encontrada no rio ACIMA da Fazenda Nova Fronteira, e o Gian foi investigar o dono da fazenda, qual era a suspeita dele?"  
-**Resposta Correta:** C) A fazenda era uma fachada para operação de mineração ilegal
+**ID:** `desbloquear_fazendeiro`
+**Título:** "O Mistério do Gado"  
+**Requisitos:** Ter coletado `Química_Coltan` + `Sombra_Roxa` + `Gado_Não_Bebe_Rio`  
+**Pergunta:** "O gado da Fazenda Nova Fronteira não bebe água do Rio Dourado contaminado. Mas então, de onde vem a água para os animais? E por que isso é suspeito?"  
+**Resposta Correta:** D) Valdemar sabe que o rio está contaminado e tem outra fonte de água - provando que conhece a operação ilegal
 
 **Recompensa:** 🧑‍🌾 Desbloqueia "Seu" Valdemar
 
@@ -58,12 +59,13 @@ Sistema de investigação educacional em 3 atos, onde o jogador coleta pistas co
 4. **Conflito_Reserva_Indígena** - Motivação real
 
 ### Enigma para Desbloquear Próximo Ato:
-**Título:** "A Motivação Oculta"  
+**ID:** `desbloquear_lider_indigena`
+**Título:** "A Fachada Logística"  
 **Requisitos:** `Fazenda_Fachada_Logística` + `Conflito_Reserva_Indígena`  
-**Pergunta:** "Por que alguém manteria uma fazenda que dá prejuízo em uma região de difícil acesso, ao lado de uma reserva indígena?"  
-**Resposta Correta:** B) Para ter acesso legal à região e facilitar invasão da terra indígena
+**Pergunta:** "Se a Fazenda Nova Fronteira não produz lucro e fica em região isolada, mas Valdemar mantém funcionários, equipamentos e estrutura cara, qual é o VERDADEIRO propósito dessa propriedade?"  
+**Resposta Correta:** C) Serve como base legal para acessar e explorar recursos da reserva indígena vizinha
 
-**Recompensa:** 🍃 Desbloqueia Pajé Yakamu
+**Recompensa:** � Desbloqueia Pajé Yakamu
 
 ---
 
@@ -79,10 +81,11 @@ Sistema de investigação educacional em 3 atos, onde o jogador coleta pistas co
 3. **Homem_Terno_Venturi** - Identidade do vilão
 
 ### Enigma para Desbloquear Final:
-**Título:** "A Conspiração Completa"  
+**ID:** `desbloquear_politico`
+**Título:** "A Rede de Poder"  
 **Requisitos:** `Trilha_Ancestrais_Mapa_Coltan` + `Homem_Terno_Venturi`  
-**Pergunta:** "Quem teria poder suficiente para: conseguir documentação para uma fazenda fachada, autorizar operações ilegais, e ter interesse em explorar recursos de terra indígena?"  
-**Resposta Correta:** C) Um político corrupto com influência em Brasília
+**Pergunta:** "Para essa operação funcionar, seria necessário: (1) conhecer mapas indígenas secretos, (2) registrar fazenda em área estratégica, (3) evitar fiscalizações ambientais, (4) ter capital para equipamentos. Quem conecta TODAS essas peças?"  
+**Resposta Correta:** C) Um político federal com influência em múltiplas esferas (legislação, fiscalização, demarcação de terras)
 
 **Recompensa:** 🤵 Desbloqueia Deputado Venturi
 
