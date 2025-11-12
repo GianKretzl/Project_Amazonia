@@ -306,21 +306,25 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         saudacoes = ['oi', 'olá', 'ola', 'hey', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite']
         eh_saudacao = any(saudacao == message_lower.strip() for saudacao in saudacoes)
         
-        # Verificar se deve fazer contra-pergunta do Coltan (apenas Dr. Arnaldo, após 8 interações)
+        # Verificar se deve fazer contra-pergunta do Coltan (apenas Dr. Arnaldo, após explorar bem a conversa)
         contra_pergunta = None
         pistas_coletadas = db.get_pistas(session_id)
         
-        # Contra-pergunta após 8 interações para garantir engajamento antes da revelação crítica
-        if entity_id == 'biologo' and interaction_count >= 8:
+        # Contra-pergunta apenas após 12 interações E ter coletado Sombra_Roxa E Gado_Não_Bebe_Rio
+        # Isso garante que o jogador explorou a conversa antes da revelação crítica
+        if entity_id == 'biologo' and interaction_count >= 12:
             # Verificar se já fez a contra-pergunta
             resposta_anterior = db.get_contra_pergunta_feita(session_id, entity_id, 'coltan')
             
-            # Se ainda não fez a contra-pergunta e já tem a pista Sombra_Roxa
-            if resposta_anterior is None and 'Sombra_Roxa' in pistas_coletadas:
-                # SEMPRE mostrar contra-pergunta após 8 interações
+            # Requisitos: ter explorado bem o mistério (2 pistas coletadas)
+            tem_base = 'Sombra_Roxa' in pistas_coletadas and 'Gado_Não_Bebe_Rio' in pistas_coletadas
+            
+            # Se ainda não fez a contra-pergunta E tem as pistas base
+            if resposta_anterior is None and tem_base:
+                # Agora sim, oferecer a revelação crítica
                 contra_pergunta = {
-                    'texto': '🤔 Você parece interessado na investigação... Você quer saber EXATAMENTE qual anomalia química eu detectei no rio?',
-                    'opcoes': ['Sim, quero saber os detalhes técnicos', 'Não, continue com a história']
+                    'texto': '🔬 *Dr. Arnaldo respira fundo* Você investigou bastante... Quer que eu revele EXATAMENTE qual químico industrial raro eu detectei? É a chave de tudo...',
+                    'opcoes': ['Sim, preciso saber a composição química exata', 'Ainda não, vou explorar mais']
                 }
                 # Salvar que a contra-pergunta foi feita
                 db.save_contra_pergunta(session_id, entity_id, 'coltan', 'pendente')
@@ -633,7 +637,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
 
     @app.route('/api/enigmas/responder', methods=['POST'])
     def api_responder_enigma():
-        """Processa resposta de um enigma"""
+        """Processa resposta de um enigma - PERMITE REFAZER SE ERRAR"""
         data = request.get_json() or {}
         enigma_id = data.get('enigma_id')
         resposta = data.get('resposta')
@@ -644,10 +648,10 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         session_id = session['session_id']
         resultado = enigmas.verificar_enigma(enigma_id, resposta)
         
-        # Salvar resultado no banco de dados
-        db.save_enigma_result(session_id, enigma_id, resposta, resultado['sucesso'])
-        
+        # Salvar apenas se acertou (não bloqueia se errou)
         if resultado['sucesso']:
+            db.save_enigma_result(session_id, enigma_id, resposta, True)
+            
             # Desbloquear entidade
             entidade_id = resultado['entidade_desbloqueada']
             ent = entidades.ENTIDADES_DA_AMAZONIA.get(entidade_id)
@@ -678,7 +682,12 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 'entidade_desbloqueada': ent
             })
         else:
-            return jsonify(resultado)
+            # Se errou, permite tentar novamente
+            return jsonify({
+                **resultado,
+                'pode_refazer': True,
+                'dica': 'Releia as pistas no dossiê e tente conectar as informações!'
+            })
 
     return app
 

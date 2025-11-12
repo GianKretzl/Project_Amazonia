@@ -107,6 +107,12 @@ class InterviewSystem {
     this.btnProximoDesafio = document.getElementById('btn-proximo-desafio');
     this.dicasArea = document.getElementById('dicas-area');
     this.dicasList = document.getElementById('dicas-list');
+    
+    // Botão de enigmas no dossiê
+    this.btnVerificarEnigmas = document.getElementById('btn-verificar-enigmas');
+    if (this.btnVerificarEnigmas) {
+      this.btnVerificarEnigmas.addEventListener('click', () => this.verificarEnigmasDisponiveis());
+    }
 
     if (this.chatForm) {
       this.chatForm.addEventListener('submit', (e) => this.handleChatSubmit(e));
@@ -747,6 +753,10 @@ class InterviewSystem {
     if (this.pistasList) {
       if (pistas.length === 0) {
         this.pistasList.innerHTML = '<p class="empty-state">Nenhuma pista coletada ainda...</p>';
+        // Esconder botão de enigmas se não tem pistas
+        if (this.btnVerificarEnigmas) {
+          this.btnVerificarEnigmas.style.display = 'none';
+        }
       } else {
         this.pistasList.innerHTML = '';
         pistas.forEach(pista => {
@@ -761,6 +771,11 @@ class InterviewSystem {
           
           this.pistasList.appendChild(badge);
         });
+        
+        // Mostrar botão de enigmas se tem 2 ou mais pistas
+        if (this.btnVerificarEnigmas && pistas.length >= 2) {
+          this.btnVerificarEnigmas.style.display = 'block';
+        }
       }
     }
   }
@@ -1145,6 +1160,22 @@ Processamento de COLTAN - Columbita-Tantalita.
     // Se ainda há desafios, abrir próximo
     if (this.desafiosDisponiveis.length > 0) {
       setTimeout(() => this.abrirDesafio(), 300);
+    }
+  }
+  
+  async verificarEnigmasDisponiveis() {
+    try {
+      const res = await fetch('/api/enigmas');
+      const data = await res.json();
+      
+      if (data.enigma) {
+        this.mostrarEnigma(data.enigma);
+      } else {
+        alert('📚 Nenhum enigma disponível no momento. Continue coletando pistas!');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar enigmas:', error);
+      alert('Erro ao buscar enigmas. Tente novamente.');
     }
   }
   

@@ -7,37 +7,37 @@ ENIGMAS = {
     # Enigma para desbloquear Valdemar (após coletar pistas do Dr. Arnaldo)
     'desbloquear_fazendeiro': {
         'id': 'desbloquear_fazendeiro',
-        'titulo': 'Enigma: O Rastro Químico',
-        'contexto': 'Você coletou informações do Dr. Arnaldo sobre a anomalia no rio. Para entender o que aconteceu com o Gian, você precisa conectar as pistas...',
-        'pergunta': 'Se a anomalia química coltan foi encontrada no rio ACIMA da Fazenda Nova Fronteira, e o Gian foi investigar o dono da fazenda, qual era a suspeita dele?',
+        'titulo': 'Enigma: O Mistério do Gado',
+        'contexto': 'Dr. Arnaldo mencionou algo intrigante: "Por que o gado do Valdemar não morre de sede, com o rio venenoso ao lado?" Pense nisso junto com as outras pistas...',
+        'pergunta': 'O gado da Fazenda Nova Fronteira não bebe água do Rio Dourado contaminado. Mas então, de onde vem a água para os animais? E por que isso é suspeito?',
         'tipo': 'multipla_escolha',
         'opcoes': [
-            'A) O fazendeiro estava usando agrotóxicos proibidos',
-            'B) A fazenda estava produzindo soja contaminada',
-            'C) A fazenda era uma fachada para operação de mineração ilegal',
-            'D) O fazendeiro estava desmatando áreas protegidas'
+            'A) Valdemar compra caminhões-pipa de água potável todos os dias',
+            'B) Existe um poço artesiano antigo na propriedade',
+            'C) O gado bebe do rio mesmo - eles são resistentes à toxina',
+            'D) Valdemar sabe que o rio está contaminado e tem outra fonte de água - provando que conhece a operação ilegal'
         ],
-        'resposta_correta': 'C',
-        'explicacao': 'Correto! Se há químicos de processamento de Coltan acima da fazenda, e o Gian investigou o fazendeiro, ele suspeitava que a fazenda era uma fachada para esconder a mineração ilegal desse mineral valioso.',
+        'resposta_correta': 'D',
+        'explicacao': 'Exatamente! Se Valdemar tem uma fonte alternativa de água para o gado, significa que ele SABE que o rio está envenenado. E se ele sabe disso, está envolvido na operação que contamina o rio. A fazenda é uma fachada para mineração ilegal de Coltan!',
         'recompensa_entidade': 'fazendeiro',
-        'requer_pistas': ['Química_Coltan', 'Sombra_Roxa']
+        'requer_pistas': ['Química_Coltan', 'Sombra_Roxa', 'Gado_Não_Bebe_Rio']
     },
     
     # Enigma para desbloquear Pajé Yakamu (após coletar pistas do Valdemar)
     'desbloquear_lider_indigena': {
         'id': 'desbloquear_lider_indigena',
-        'titulo': 'Enigma: A Motivação Oculta',
-        'contexto': 'Valdemar revelou que sua fazenda é uma fachada e tem interesse na reserva indígena. Por que alguém manteria uma fazenda não lucrativa?',
-        'pergunta': 'Por que alguém manteria uma fazenda que dá prejuízo em uma região de difícil acesso, ao lado de uma reserva indígena?',
+        'titulo': 'Enigma: A Fachada Logística',
+        'contexto': 'Valdemar admitiu que a fazenda dá prejuízo e serve como "ponto de apoio logístico". Pense: qual o verdadeiro valor estratégico dessa localização?',
+        'pergunta': 'Se a Fazenda Nova Fronteira não produz lucro e fica em região isolada, mas Valdemar mantém funcionários, equipamentos e estrutura cara, qual é o VERDADEIRO propósito dessa propriedade?',
         'tipo': 'multipla_escolha',
         'opcoes': [
-            'A) Por amor à natureza e ao meio ambiente',
-            'B) Para ter acesso legal à região e facilitar invasão da terra indígena',
-            'C) Para criar empregos para a comunidade local',
-            'D) Para experimentar novos métodos de agricultura sustentável'
+            'A) É um investimento de longo prazo esperando valorização da terra',
+            'B) Valdemar usa como refúgio pessoal para esconder dinheiro da justiça',
+            'C) Serve como base legal para acessar e explorar recursos da reserva indígena vizinha',
+            'D) É uma operação de lavagem de dinheiro disfarçada de agropecuária'
         ],
-        'resposta_correta': 'B',
-        'explicacao': 'Exatamente! A fazenda serve como ponto de apoio legal na região. Ter uma propriedade registrada próxima facilita o acesso, cria presença institucional e permite operações secretas na terra indígena vizinha.',
+        'resposta_correta': 'C',
+        'explicacao': 'Perfeito! A fazenda é uma "fachada logística" - ter propriedade registrada próxima à reserva dá acesso legal à região, justifica presença de pessoas e equipamentos, e permite invasões secretas. É a base de operações para minerar Coltan em terra indígena!',
         'recompensa_entidade': 'lider_indigena',
         'requer_pistas': ['Fazenda_Fachada_Logística', 'Conflito_Reserva_Indígena']
     },
@@ -45,18 +45,18 @@ ENIGMAS = {
     # Enigma para desbloquear Deputado Venturi (após coletar pistas do Pajé)
     'desbloquear_politico': {
         'id': 'desbloquear_politico',
-        'titulo': 'Enigma: A Conspiração Completa',
-        'contexto': 'O Pajé revelou que existe um mapa ancestral indicando depósitos de Coltan na terra indígena, e mencionou um homem de terno de Brasília. Quem seria capaz de orquestrar tudo isso?',
-        'pergunta': 'Quem teria poder suficiente para: conseguir documentação para uma fazenda fachada, autorizar operações ilegais, e ter interesse em explorar recursos de terra indígena?',
+        'titulo': 'Enigma: A Rede de Poder',
+        'contexto': 'O Pajé mencionou mapas ancestrais com Coltan e um "homem de terno que veio de Brasília". Analise toda a cadeia de eventos...',
+        'pergunta': 'Para essa operação funcionar, seria necessário: (1) conhecer mapas indígenas secretos, (2) registrar fazenda em área estratégica, (3) evitar fiscalizações ambientais, (4) ter capital para equipamentos. Quem conecta TODAS essas peças?',
         'tipo': 'multipla_escolha',
         'opcoes': [
-            'A) Um grande empresário de mineração',
-            'B) Um fazendeiro rico da região',
-            'C) Um político corrupto com influência em Brasília',
-            'D) Um grupo de garimpeiros organizados'
+            'A) Uma máfia internacional de contrabando de minerais',
+            'B) Um cartel de mineradoras multinacionais',
+            'C) Um político federal com influência em múltiplas esferas (legislação, fiscalização, demarcação de terras)',
+            'D) Uma organização criminosa local com apoio de garimpeiros'
         ],
         'resposta_correta': 'C',
-        'explicacao': 'Perfeito! Apenas um político com poder em Brasília teria capacidade de: aprovar documentação fraudulenta, bloquear fiscalizações, influenciar demarcações de terra e coordenar uma operação tão complexa. O Deputado Venturi está por trás de tudo!',
+        'explicacao': 'Excelente dedução! Apenas alguém com poder em Brasília pode: aprovar registros de propriedade fraudulentos, bloquear ações da FUNAI e IBAMA, acessar mapas de estudos governamentais sobre recursos minerais, e ter capital político para "convencer" autoridades locais. O Deputado Venturi é o MASTERMIND!',
         'recompensa_entidade': 'politico',
         'requer_pistas': ['Trilha_Ancestrais_Mapa_Coltan', 'Homem_Terno_Venturi']
     }
@@ -73,8 +73,9 @@ def verificar_enigma(enigma_id, resposta_usuario):
     
     return {
         'sucesso': sucesso,
-        'explicacao': enigma['explicacao'] if sucesso else 'Resposta incorreta. Releia as pistas coletadas e tente novamente.',
-        'entidade_desbloqueada': enigma['recompensa_entidade'] if sucesso else None
+        'explicacao': enigma['explicacao'] if sucesso else '❌ Resposta incorreta. Analise melhor as pistas coletadas e tente novamente. Você pode refazer o enigma!',
+        'entidade_desbloqueada': enigma['recompensa_entidade'] if sucesso else None,
+        'pode_refazer': not sucesso  # Permite tentar de novo se errou
     }
 
 def get_enigma_disponivel(pistas_coletadas):
