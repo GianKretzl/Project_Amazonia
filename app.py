@@ -823,6 +823,9 @@ Tente ser mais específico - pergunte sobre locais, pessoas, eventos ou conceito
 *aguarda sua próxima pergunta*"""
 
 
+# Criar instância global do app para Gunicorn (produção)
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
+    # Modo desenvolvimento
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=os.getenv('FLASK_DEBUG', '1') == '1')
