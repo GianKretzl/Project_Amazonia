@@ -331,21 +331,16 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         
         if not eh_saudacao and len(message.strip()) > 5:
             for p in ent.get('pistas_chave', []):
-                # Pista especial "Química_Coltan" - DETECÇÃO SIMPLIFICADA
+                # Pista especial "Química_Coltan" - APENAS VIA CONTRA-PERGUNTA
                 if p == 'Química_Coltan':
-                    # Adiciona se:
-                    # 1. Respondeu "Sim" à contra-pergunta, OU
-                    # 2. A IA mencionou "coltan" E algum termo químico relevante, OU
-                    # 3. O usuário perguntou diretamente sobre coltan/química E a IA respondeu com contexto
+                    # RESTRIÇÃO: Só adiciona se respondeu "Sim" à contra-pergunta
+                    # (após 12+ interações e ter coletado Sombra_Roxa + Gado_Não_Bebe_Rio)
                     respondeu_sim = data.get('resposta_contra_pergunta') == 'sim'
-                    ia_mencionou = 'coltan' in reply_lower and any(termo in reply_lower for termo in ['tântalo', 'nióbio', 'mercúrio', 'solvente', 'químic', 'composição', 'mineral', 'processar'])
-                    pergunta_direta = any(termo in message_lower for termo in ['coltan', 'químic', 'mineral', 'composição']) and len(reply_lower) > 100
                     
-                    if respondeu_sim or ia_mencionou or pergunta_direta:
+                    if respondeu_sim:
                         found.append(p)
-                        if respondeu_sim:
-                            db.save_contra_pergunta(session_id, entity_id, 'coltan', 'sim')
-                        print(f"🔬 Pista Química_Coltan detectada! (sim={respondeu_sim}, IA={ia_mencionou}, direta={pergunta_direta})")
+                        db.save_contra_pergunta(session_id, entity_id, 'coltan', 'sim')
+                        print(f"🔬 Pista Química_Coltan detectada via contra-pergunta!")
                     continue
                 
                 # Converter underscore para espaço e verificar
