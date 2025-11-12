@@ -5,30 +5,105 @@
 // Gerenciador de Sons
 class SoundManager {
   constructor() {
-    this.sounds = {
-      floresta: new Audio('/static/audio/ambiente_floresta.mp3'),
-      pistaColetada: new Audio('/static/audio/pista_coletada.mp3'),
-      alerta: new Audio('/static/audio/alerta_critico.mp3'),
-      estatica: new Audio('/static/audio/estatica_radio.mp3'),
-      revelacao: new Audio('/static/audio/revelacao_final.mp3')
+    this.sounds = {};
+    this.initialized = false;
+    this.ambientePlaying = false;
+    this.audioEnabled = true;
+    this.failedAudios = [];
+    
+    // Definir configurações de áudio
+    this.audioConfig = {
+      floresta: { path: '/static/audio/ambiente_floresta.mp3', volume: 0.25 },
+      pistaColetada: { path: '/static/audio/pista_coletada.mp3', volume: 0.6 },
+      alerta: { path: '/static/audio/alerta_critico.mp3', volume: 0.65 },
+      estatica: { path: '/static/audio/estatica_radio.mp3', volume: 0.45 },
+      revelacao: { path: '/static/audio/revelacao_final.mp3', volume: 0.75 }
     };
+  }
+  
+  // Inicializar áudios após interação do usuário
+  init() {
+    if (this.initialized) return;
     
-    // Sem loops - áudios tocam uma vez
+    console.log('🔊 Inicializando sistema de áudio...');
     
-    // Configurar volumes
-    this.sounds.floresta.volume = 0.25;
-    this.sounds.pistaColetada.volume = 0.6;
-    this.sounds.alerta.volume = 0.65;
-    this.sounds.estatica.volume = 0.45;
-    this.sounds.revelacao.volume = 0.75;
-    
-    this.ambientePlaying = null;
+    try {
+      Object.entries(this.audioConfig).forEach(([name, config]) => {
+        const audio = new Audio(config.path);
+        audio.volume = config.volume;
+        audio.preload = 'auto';
+        
+        // Adicionar event listeners para debug detalhado
+        audio.addEventListener('error', (e) => {
+          console.error(`❌ ERRO ao carregar áudio ${name}:`, {
+            path: config.path,
+            error: e.target.error,
+            code: e.target.error?.code,
+            message: e.target.error?.message
+          });
+          this.failedAudios.push(name);
+        });
+        
+        audio.addEventListener('canplaythrough', () => {
+          console.log(`✅ Áudio ${name} carregado com sucesso`);
+        });
+        
+        audio.addEventListener('loadedmetadata', () => {
+          console.log(`📊 Metadata carregada para ${name}: ${audio.duration.toFixed(2)}s`);
+        });
+        
+        this.sounds[name] = audio;
+      });
+      
+      this.initialized = true;
+      console.log('🔊 Sistema de áudio inicializado');
+      
+      // Mostrar aviso se houver falhas após 3 segundos
+      setTimeout(() => {
+        if (this.failedAudios.length > 0) {
+          console.warn(`⚠️ ${this.failedAudios.length} áudios falharam ao carregar:`, this.failedAudios);
+        }
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ Erro crítico ao inicializar áudios:', error);
+      this.audioEnabled = false;
+    }
   }
   
   play(soundName) {
+    // Verificar se áudio está habilitado
+    if (!this.audioEnabled) {
+      console.log(`🔇 Áudio desabilitado, não tocando ${soundName}`);
+      return;
+    }
+    
+    // Inicializar se necessário
+    if (!this.initialized) {
+      this.init();
+    }
+    
     if (this.sounds[soundName]) {
+      // Resetar e tocar
       this.sounds[soundName].currentTime = 0;
-      this.sounds[soundName].play().catch(e => console.log('Audio play failed:', e));
+      
+      const playPromise = this.sounds[soundName].play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log(`🎵 Tocando ${soundName}`);
+          })
+          .catch(e => {
+            console.warn(`⚠️ Não foi possível tocar ${soundName}:`, {
+              error: e.name,
+              message: e.message,
+              reason: e.name === 'NotAllowedError' ? 'Autoplay bloqueado pelo navegador' : 'Erro desconhecido'
+            });
+          });
+      }
+    } else {
+      console.warn(`⚠️ Áudio ${soundName} não encontrado nos sons carregados`);
     }
   }
   
@@ -69,15 +144,79 @@ class InterviewSystem {
     this.excaliburEngine = null;
     this.excaliburScene = null;
     this.entityActors = {};
-    this.chatHistory = [];  // Histórico de conversa
+    this.chatHistory = [];
     this.desafiosDisponiveis = [];
     this.desafioAtual = null;
     this.respostaSelecionada = null;
-    this.pistasColetadas = [];  // Rastrear pistas coletadas localmente
+    this.audioInitialized = false;
     
     this.initElements();
     this.initExcalibur();
     this.loadEntities();
+    this.setupAudioInit();
+  }
+  
+  // Inicializar áudio após primeira interação do usuário
+  setupAudioInit() {
+    const audioStatus = document.getElementById('audio-status');
+    const btnTestAudio = document.getElementById('btn-test-audio');
+    
+    const initAudio = () => {
+      if (!this.audioInitialized) {
+        soundManager.init();
+        this.audioInitialized = true;
+        console.log('🎵 Áudio inicializado após interação do usuário');
+        
+        if (audioStatus) {
+          audioStatus.textContent = '🔊 Áudio: Inicializado ✅';
+          audioStatus.style.color = '#00ff88';
+        }
+      }
+    };
+    
+    // Botão de teste de áudio
+    if (btnTestAudio) {
+      btnTestAudio.addEventListener('click', () => {
+        initAudio();
+        
+        // Testar tocando som de alerta
+        setTimeout(() => {
+          soundManager.play('alerta');
+          
+          if (audioStatus) {
+            audioStatus.textContent = '🔊 Áudio: Testando...';
+            audioStatus.style.color = '#fbbf24';
+          }
+          
+          // Verificar resultado após 1 segundo
+          setTimeout(() => {
+            if (soundManager.failedAudios.length === 0) {
+              if (audioStatus) {
+                audioStatus.textContent = '🔊 Áudio: Funcionando! 🎉';
+                audioStatus.style.color = '#00ff88';
+              }
+            } else {
+              if (audioStatus) {
+                audioStatus.textContent = `⚠️ ${soundManager.failedAudios.length} áudios com erro`;
+                audioStatus.style.color = '#ef4444';
+              }
+            }
+          }, 1000);
+        }, 100);
+      });
+    }
+    
+    // Inicializar ao clicar em qualquer lugar (exceto no botão de teste)
+    document.addEventListener('click', (e) => {
+      if (e.target !== btnTestAudio && !btnTestAudio?.contains(e.target)) {
+        initAudio();
+      }
+    }, { once: true });
+    
+    // Inicializar ao enviar mensagem
+    if (this.chatForm) {
+      this.chatForm.addEventListener('submit', initAudio, { once: true });
+    }
   }
 
   initElements() {
