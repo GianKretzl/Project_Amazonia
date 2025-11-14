@@ -1,5 +1,18 @@
-Flask>=2.0
-python-dotenv>=0.21
-openai>=0.27.0
-psycopg2-binary>=2.9.9
-gunicorn>=21.2.0
+# Web Framework
+Flask==3.1.2
+flask-cors==5.0.0
+
+# Environment Variables
+python-dotenv==1.2.1
+
+# OpenAI API
+openai==2.7.2
+
+# Database (removido psycopg2 - usando SQLite)
+# psycopg2-binary>=2.9.9  # Não necessário - projeto usa SQLite
+
+# WSGI Server
+gunicorn==23.0.0
+
+# Utilities
+requests==2.32.3
