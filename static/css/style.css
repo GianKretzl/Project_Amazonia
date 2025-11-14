@@ -1113,49 +1113,7 @@ body {
   border-color: #4b5563;
 }
 
-/* Sugestões de perguntas */
-.question-suggestions {
-  padding: 16px 20px;
-  background: var(--color-bg-light);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.suggestions-label {
-  font-size: 13px;
-  color: var(--color-text-dim);
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-
-.suggestions-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.suggestion-btn {
-  padding: 8px 16px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  color: var(--color-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: var(--font-sans);
-}
-
-.suggestion-btn:hover {
-  background: var(--color-purple);
-  color: white;
-  border-color: var(--color-purple);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(168, 85, 247, 0.3);
-}
-
-.suggestion-btn:active {
-  transform: translateY(0);
-}
+/* Sugestões de perguntas - REMOVIDAS (exploração livre) */
 
 .chat-form {
   display: flex;

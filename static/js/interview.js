@@ -668,9 +668,6 @@ class InterviewSystem {
     // Carregar desafios desta entidade
     this.carregarDesafios(entity.id);
     
-    // Mostrar sugestões de perguntas
-    this.showQuestionSuggestions(entity);
-    
     // VERIFICAR se deve mostrar contra-pergunta do Coltan (Dr. Arnaldo com >3 interações)
     if (entity.id === 'biologo' && this.chatHistory.length >= 6) {
       // 6 mensagens = 3 interações (pergunta + resposta)
@@ -784,57 +781,7 @@ class InterviewSystem {
     }, { once: true });
   }
 
-  showQuestionSuggestions(entity) {
-    const suggestionsContainer = document.getElementById('suggestions-buttons');
-    if (!suggestionsContainer) return;
-    
-    // Sugestões específicas por entidade
-    const suggestions = {
-      'biologo': [
-        'O que é a sombra roxa?',
-        'Você conhece a Gian Kretzl?',
-        'O que é Coltan?',
-        'Por que você está com medo?'
-      ],
-      'fazendeiro': [
-        'O que você produz na fazenda?',
-        'A fazenda é lucrativa?',
-        'O que você sabe sobre a sombra roxa?',
-        'Por que quer expandir para a reserva indígena?'
-      ],
-      'lider_indigena': [
-        'O que aconteceu com o rio?',
-        'O que é o Mapa da Montanha de Fogo?',
-        'Quem é o homem de terno?',
-        'O que você sabe sobre Coltan?'
-      ],
-      'politico': [
-        'Qual é seu interesse na Amazônia?',
-        'Você conhece o Valdemar?',
-        'O que aconteceu com a Gian Kretzl?',
-        'Qual é o verdadeiro plano?'
-      ]
-    };
-    
-    const entitySuggestions = suggestions[entity.id] || [
-      'Conte-me sobre você',
-      'O que você sabe sobre a investigação?',
-      'Você pode me ajudar?'
-    ];
-    
-    suggestionsContainer.innerHTML = '';
-    entitySuggestions.forEach(question => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'suggestion-btn';
-      btn.textContent = question;
-      btn.addEventListener('click', () => {
-        this.chatInput.value = question;
-        this.chatInput.focus();
-      });
-      suggestionsContainer.appendChild(btn);
-    });
-  }
+  // Sugestões de perguntas removidas - jogador explora livremente
 
   closeChatArea() {
     // Tocar som de estática ao fechar
