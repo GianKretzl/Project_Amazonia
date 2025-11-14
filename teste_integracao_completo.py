@@ -325,10 +325,10 @@ class TesteIntegracaoCompleto:
             time.sleep(0.3)
         
         # Desafio educativo (Ciências)
-        self.responder_desafio('biologo_desafio_1', 'A')  # Exemplo
+        self.responder_desafio('ciencias_1', 'B')  # Resposta correta sobre bioacumulação
         
         # Resolver enigma para desbloquear Valdemar
-        self.resolver_enigma('desbloquear_fazendeiro', 'VALDEMAR')
+        self.resolver_enigma('desbloquear_fazendeiro', 'C')
     
     def executar_ato_2_fazendeiro(self):
         """ATO II: O Segredo da Fazenda - Valdemar (Geografia)"""
@@ -354,7 +354,7 @@ class TesteIntegracaoCompleto:
             time.sleep(0.3)
         
         # Resolver enigma
-        self.resolver_enigma('desbloquear_lider_indigena', 'YAKAMU')
+        self.resolver_enigma('desbloquear_lider_indigena', 'C')
     
     def executar_ato_3_indigena(self):
         """ATO III: A Sabedoria Ancestral - Yakamu (História)"""
@@ -379,7 +379,7 @@ class TesteIntegracaoCompleto:
             time.sleep(0.3)
         
         # Resolver enigma
-        self.resolver_enigma('desbloquear_podcaster', 'JONAS')
+        self.resolver_enigma('desbloquear_podcaster', 'C')
     
     def executar_ato_4_podcaster(self):
         """ATO IV: As Teorias da Conspiração - Jonas Falcão"""
@@ -429,7 +429,7 @@ class TesteIntegracaoCompleto:
             time.sleep(0.3)
         
         # Resolver enigma final
-        self.resolver_enigma('desbloquear_politico', 'VENTURI')
+        self.resolver_enigma('desbloquear_politico', 'C')
     
     def executar_ato_6_politico(self):
         """ATO VI: A Revelação Final - Deputado Venturi"""
