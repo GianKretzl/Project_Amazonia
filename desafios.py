@@ -27,7 +27,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! Bioacumulação é o processo onde substâncias tóxicas (como mercúrio) se acumulam nos organismos. Peixes pequenos contaminados são comidos por peixes maiores, que concentram ainda mais o veneno. Comunidades ribeirinhas que dependem da pesca podem sofrer envenenamento grave.',
         'recompensa': 'dica_coltan',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte ao Dr. Arnaldo sobre químicos específicos usados no processamento de minerais.',
+        'dica_texto': '💡 DICA: Pergunte ao Dr. Arnaldo sobre químicos específicos usados no processamento de minerais.',
         'dica_falsa': False
     },
     
@@ -46,7 +46,7 @@ DESAFIOS = {
         'resposta_correta': 'C',
         'explicacao': 'Exato! Químicos industriais frequentemente contêm nutrientes como nitrogênio e fósforo. O excesso causa eutrofização - crescimento explosivo de algas que consomem todo oxigênio da água e podem produzir toxinas, criando "zonas mortas" e matando peixes.',
         'recompensa': 'pergunta_chave_1',
-        'dica_texto': '🚨 DICA FALSA: Pergunte se a cor roxa vem de refluxo de petróleo subterrâneo.',
+        'dica_texto': '💭 DICA: Pergunte se a cor roxa vem de refluxo de petróleo subterrâneo.',
         'dica_falsa': True
     },
     
@@ -65,7 +65,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! Metais pesados como mercúrio, chumbo e cádmio causam danos neurológicos permanentes, afetam os rins, causam problemas cardiovasculares e são especialmente perigosos para crianças e gestantes, podendo causar deficiências no desenvolvimento.',
         'recompensa': 'dica_saude',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte sobre a conexão entre o gado de Valdemar e a fonte de água.',
+        'dica_texto': '💡 DICA: Pergunte sobre a conexão entre o gado de Valdemar e a fonte de água.',
         'dica_falsa': False
     },
     
@@ -84,7 +84,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Exato! Cianobactérias (ou algas azuis) fazem fotossíntese mas são bactérias. Quando há excesso de nutrientes poluentes, proliferam e produzem cianotoxinas que causam danos ao fígado, sistema nervoso e podem ser fatais para humanos e animais que bebem água contaminada.',
         'recompensa': 'dica_toxinas',
-        'dica_texto': '🚨 DICA FALSA: Pergunte se a NASA está escondendo dados sobre meteoros na Amazônia.',
+        'dica_texto': '💭 DICA: Pergunte se a NASA está escondendo dados sobre meteoros na Amazônia.',
         'dica_falsa': True
     },
     
@@ -103,7 +103,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! Imagens de satélite permitem monitorar milhares de km² simultaneamente, detectar padrões invisíveis ao nível do solo (como a Sombra Roxa) e acompanhar mudanças ao longo do tempo. Na Amazônia, onde o acesso é difícil, satélites são essenciais para flagrar crimes ambientais.',
         'recompensa': 'dica_satelite',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte como Gian descobriu a anomalia e qual foi sua teoria inicial.',
+        'dica_texto': '💡 DICA: Pergunte como Gian descobriu a anomalia e qual foi sua teoria inicial.',
         'dica_falsa': False
     },
     
@@ -125,7 +125,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! Uma fazenda precisa de: solo fértil (raro na Amazônia após desmatamento), logística para escoar produção (estradas) e proximidade de mercados. Sem isso, os custos superam o lucro. Quando uma fazenda não tem essas condições mas existe mesmo assim... há algo suspeito!',
         'recompensa': 'dica_economia',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte a Valdemar sobre os custos operacionais e o lucro real da fazenda.',
+        'dica_texto': '💡 DICA: Pergunte a Valdemar sobre os custos operacionais e o lucro real da fazenda.',
         'dica_falsa': False
     },
     
@@ -144,7 +144,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Exato! Grilagem é a falsificação de documentos para roubar terras públicas ou indígenas. Grileiros usam fazendas como "fachada" para legitimar presença ilegal, pressionam fronteiras de reservas indígenas e frequentemente estão ligados a crimes ambientais e violência.',
         'recompensa': 'dica_grilagem',
-        'dica_texto': '🚨 DICA FALSA: Pergunte se Valdemar tem contrato oficial com a FUNAI para usar a terra.',
+        'dica_texto': '💭 DICA: Pergunte se Valdemar tem contrato oficial com a FUNAI para usar a terra.',
         'dica_falsa': True
     },
     
@@ -163,7 +163,7 @@ DESAFIOS = {
         'resposta_correta': 'C',
         'explicacao': 'Correto! O solo amazônico é naturalmente pobre - os nutrientes estão nas plantas, não no solo. Sem a floresta, a chuva intensa lava (lixivia) os poucos nutrientes restantes e causa erosão. Por isso fazendas amazônicas frequentemente fracassam economicamente.',
         'recompensa': 'dica_solo',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte por que Valdemar mantém a fazenda se o solo não é bom para agricultura.',
+        'dica_texto': '💡 DICA: Pergunte por que Valdemar mantém a fazenda se o solo não é bom para agricultura.',
         'dica_falsa': False
     },
     
@@ -182,7 +182,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Exato! Corredores logísticos (BR-163, hidrovias) são cruciais para viabilizar atividades econômicas em regiões remotas. Quem controla a logística, controla o acesso e a exploração. A Fazenda Nova Fronteira está posicionada ESTRATEGICAMENTE para ser um ponto de apoio logístico!',
         'recompensa': 'dica_logistica',
-        'dica_texto': '🚨 DICA FALSA: Pergunte se a fazenda exporta soja orgânica certificada para a Europa.',
+        'dica_texto': '💭 DICA: Pergunte se a fazenda exporta soja orgânica certificada para a Europa.',
         'dica_falsa': True
     },
     
@@ -201,7 +201,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! Especuladores GRILAM terras públicas/indígenas com documentos falsos, fazem desmatamento mínimo para "comprovar posse", aguardam obras públicas (estradas, hidrovias) que valorizam a região, e revendem ou usam como garantia bancária. É um esquema lucrativo baseado em crime!',
         'recompensa': 'dica_especulacao',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte sobre quem prometeu a hidrovia e por que passaria exatamente ali.',
+        'dica_texto': '💡 DICA: Pergunte sobre quem prometeu a hidrovia e por que passaria exatamente ali.',
         'dica_falsa': False
     },
     
@@ -223,7 +223,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! A Constituição reconhece o direito ORIGINÁRIO dos povos indígenas sobre suas terras tradicionais - ou seja, um direito anterior ao próprio Estado brasileiro. Essas terras são inalienáveis e indisponíveis, não podem ser vendidas ou invadidas.',
         'recompensa': 'dica_direitos',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte ao Pajé sobre tentativas políticas de reverter a demarcação.',
+        'dica_texto': '💡 DICA: Pergunte ao Pajé sobre tentativas políticas de reverter a demarcação.',
         'dica_falsa': False
     },
     
@@ -242,7 +242,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Exatamente! O conhecimento tradicional inclui: localização de recursos (como minerais), propriedades medicinais de plantas (várias descobertas científicas vieram desse conhecimento), técnicas de manejo sustentável e mapeamento detalhado da floresta. É por isso que esse conhecimento é cobiçado!',
         'recompensa': 'dica_conhecimento',
-        'dica_texto': '🚨 DICA FALSA: Pergunte se a Trilha dos Ancestrais leva a um templo atlante com ouro.',
+        'dica_texto': '💭 DICA: Pergunte se a Trilha dos Ancestrais leva a um templo atlante com ouro.',
         'dica_falsa': True
     },
     
@@ -261,7 +261,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! Durante o Ciclo da Borracha, Ciclo do Ouro, extração de madeira e agropecuária, povos indígenas foram sistematicamente expulsos, escravizados ou mortos. Esse padrão se repete: interesse econômico → invasão de terras → violência. O Coltan é apenas o mais novo ciclo dessa história trágica.',
         'recompensa': 'dica_historia',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte sobre o homem de terno que visitou a aldeia antes de Gian desaparecer.',
+        'dica_texto': '💡 DICA: Pergunte sobre o homem de terno que visitou a aldeia antes de Gian desaparecer.',
         'dica_falsa': False
     },
     
@@ -280,7 +280,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! O Estatuto de 1973 foi um avanço, mas tinha visão INTEGRACIONISTA - queria que índios se "integrassem" e deixassem de ser índios. Só com a Constituição de 1988 reconheceu-se o direito de manter cultura e identidade próprias. Foi uma mudança histórica fundamental!',
         'recompensa': 'dica_estatuto',
-        'dica_texto': '🚨 DICA FALSA: Pergunte se o governo federal ofereceu compensação financeira justa pela invasão.',
+        'dica_texto': '💭 DICA: Pergunte se o governo federal ofereceu compensação financeira justa pela invasão.',
         'dica_falsa': True
     },
     
@@ -299,7 +299,7 @@ DESAFIOS = {
         'resposta_correta': 'B',
         'explicacao': 'Correto! A FUNAI nasceu com missão protetora, mas durante a Ditadura Militar (1964-1985) foi USADA para abrir terras indígenas para grandes projetos (rodovias, mineração). Até hoje sofre interferência política. Quando há interesse econômico, a proteção "desaparece". Igual ao caso do Coltan!',
         'recompensa': 'dica_funai',
-        'dica_texto': '💡 DICA VERDADEIRA: Pergunte sobre a "Pedra Preta Pesada que Brilha" mencionada pelos ancestrais.',
+        'dica_texto': '💡 DICA: Pergunte sobre a "Pedra Preta Pesada que Brilha" mencionada pelos ancestrais.',
         'dica_falsa': False
     }
 }

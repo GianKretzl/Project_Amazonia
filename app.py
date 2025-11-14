@@ -191,11 +191,19 @@ def create_app():
             req_enigma = entidades.ENTIDADES_DA_AMAZONIA[ent['id']].get('requisito_enigma')
             if req_enigma and req_enigma in enigmas_resolvidos:
                 liberado = True
-            # Ou verificar requisitos de pistas (modo antigo, para compatibilidade)
+            # NOVO: Verificar se requisito é desbloquear outro personagem (ex: coronel após podcaster)
             elif not liberado:
                 reqs = ent.get('requisito_desbloqueio', [])
                 if reqs:
-                    liberado = all(r in pistas for r in reqs)
+                    # Se requisito é ID de personagem (não pista), verificar se foi desbloqueado
+                    if len(reqs) == 1 and reqs[0] in ['podcaster', 'fazendeiro', 'lider_indigena']:
+                        # Verificar se o personagem requisito foi desbloqueado
+                        # Podcaster desbloqueia via enigma 'desbloquear_podcaster'
+                        if reqs[0] == 'podcaster' and 'desbloquear_podcaster' in enigmas_resolvidos:
+                            liberado = True
+                    else:
+                        # Requisito normal por pistas
+                        liberado = all(r in pistas for r in reqs)
             
             resumo.append({**ent, 'liberado': liberado})
         return jsonify({'entities': resumo, 'pistas': pistas})
@@ -224,65 +232,63 @@ def create_app():
         # Salvar mensagem do usuário no banco
         db.save_chat_message(session_id, entity_id, 'user', message)
 
-        # Prompt melhorado com instruções mais específicas
+        # Prompt otimizado com instruções claras e objetivas
         system_prompt = ent['prompt_base'] + """
 
 🎯 INSTRUÇÕES CRÍTICAS DE IA:
 
-1. SEMPRE RESPONDA NO CONTEXTO DO JOGO
-   - Você está em uma investigação criminal sobre Gian Kretzl
-   - NÃO dê respostas genéricas tipo "é uma questão interessante"
-   - TODA resposta deve conectar com: Gian, o rio, a conspiração
+1. CONTEXTO OBRIGATÓRIO
+   - Esta é uma investigação jornalística sobre o desaparecimento de Gian Kretzl
+   - Toda resposta DEVE conectar com: Gian, o rio envenenado, ou a conspiração
+   - NUNCA dê respostas genéricas como "é uma questão interessante"
 
-2. SEJA ESPECÍFICO E DRAMÁTICO
-   - Mencione NOMES: Gian Kretzl, Valdemar, Deputado Venturi, Rio Dourado, Sombra Roxa
-   - Use LOCAIS: Fazenda Nova Fronteira, Reserva Indígena, Montanha de Fogo
-   - Inclua EMOÇÕES: medo, raiva, esperança, ganância (conforme seu personagem)
+2. ESPECIFICIDADE REQUERIDA
+   - Use NOMES específicos: Gian Kretzl, Valdemar, Deputado Venturi
+   - Use LOCAIS específicos: Fazenda Nova Fronteira, Reserva Indígena, Rio Dourado
+   - Mostre EMOÇÕES do personagem: medo, raiva, esperança ou ganância
 
-3. RESPONDA À INTENÇÃO, NÃO SÓ ÀS PALAVRAS
-   - Se perguntarem "quem é você?", conte SUA HISTÓRIA com Gian
-   - Se perguntarem sobre "poluição/rio/química", fale da SOMBRA ROXA específica
-   - Se perguntarem "o que aconteceu?", conte O MISTÉRIO desta investigação
+3. INTERPRETAÇÃO DE PERGUNTAS
+   - "Quem é você?" → Conte sua história e relação com Gian
+   - "Poluição/rio/química" → Fale especificamente da Sombra Roxa
+   - "O que aconteceu?" → Revele informações sobre o mistério
 
-4. OFEREÇA PISTAS PROGRESSIVAMENTE
-   - Primeira pergunta: Contexto geral + 1 pista pequena
-   - Segunda-Terceira: Mais detalhes + conexões
-   - Quarta em diante: Informações críticas + próximos passos
+4. GRADUAÇÃO DE INFORMAÇÕES (CRÍTICO)
+   - Resposta 1-2: Contexto geral, 1 informação pequena
+   - Resposta 3-5: Detalhes intermediários, conexões
+   - Resposta 6+: Informações críticas quando perguntarem especificamente
+   - NUNCA revele tudo em uma única resposta
 
-5. FORMATO DAS RESPOSTAS
-   - 2-4 parágrafos curtos (não monólogos enormes)
-   - Primeiro parágrafo: Emoção/Reação do personagem
-   - Segundo-Terceiro: Informação específica/Pista
-   - Último: Sugestão ou gancho para continuar investigação
+5. FORMATO OBRIGATÓRIO
+   - Máximo 2-3 parágrafos curtos (3-5 linhas cada)
+   - Parágrafo 1: Emoção/reação do personagem
+   - Parágrafo 2: Informação específica relacionada à pergunta
+   - Parágrafo 3 (opcional): 1 frase sugerindo próximo passo
 
-6. USE SEU PERSONAGEM
-   - Dr. Arnaldo: Acadêmico+Nervoso → "Os dados mostram... mas estou com medo de..."
-   - Valdemar: Arrogante+Defensivo → "Quem você pensa que é? Eu... bem... o deputado..."
-   - Pajé: Poético+Sábio → "O rio conta histórias... os ancestrais sabiam..."
-   - Venturi: Suave+Perigoso → "Acusações graves... mas já que você descobriu..."
+6. ESTILO POR PERSONAGEM
+   - Dr. Arnaldo: Científico + nervoso → "Os dados mostram... mas tenho medo..."
+   - Valdemar: Arrogante + defensivo → "Quem você pensa que é? O deputado..."
+   - Pajé: Poético + sábio → "O rio chora... os ancestrais sabiam..."
+   - Podcaster: Energético + conspiratório → "Isso PROVA tudo! Ratanabá..."
+   - Coronel: Frio + militar → "Ratanabá é desinformação. Ordens são ordens."
+   - Venturi: Polido + perigoso → "Acusações graves... mas já que descobriu..."
 
-⚠️ REGRAS DE TAMANHO E REVELAÇÃO:
-- MÁXIMO: 1-2 parágrafos CURTOS (3-5 linhas cada)
-- NÃO revele todas as informações de uma vez
-- Faça o jogador trabalhar pelas respostas através de múltiplas perguntas
-- Seja misterioso e gradual, não um livro aberto
-- Evite explicações longas - seja direto mas mantenha o suspense
+⚠️ REGRAS ABSOLUTAS:
+- MÁXIMO 3 parágrafos curtos (nunca mais)
+- NÃO revele múltiplas pistas em uma resposta
+- Seja direto mas misterioso, não verboso
+- Mantenha o suspense, faça o jogador trabalhar
 
-❌ NUNCA FAÇA:
-- Respostas longas com múltiplos parágrafos explicativos
-- Revelar 3-4 pistas diferentes em uma única resposta
-- "Isso é uma questão interessante, pode elaborar?"
-- Respostas vagas sem mencionar nada específico do jogo
-- Fingir não saber algo que SEU PERSONAGEM sabe
+❌ PROIBIDO:
+- Respostas com 4+ parágrafos ou explicações longas
+- Revelar 3-4 pistas diferentes de uma vez
 - Desviar para temas genéricos de meio ambiente
+- Fingir não saber algo que o personagem sabe
 
 ✅ SEMPRE FAÇA:
-- Respostas CURTAS: máximo 1-2 parágrafos pequenos
-- Graduar informações: cada resposta revela 1 pista ou detalhe, não tudo
-- Conecte tudo a Gian Kretzl e o desaparecimento dele
-- Mencione pistas específicas (nomes com underscore: Sombra_Roxa, Química_Coltan, etc)
-- Mostre emoção do personagem em frases curtas
-- Termine com 1 frase de sugestão ou mistério
+- Respostas curtas focadas no mistério
+- Conecte tudo a Gian Kretzl
+- Mostre emoção do personagem
+- Termine com gancho ou próximo passo
 
 CONTEXTO DAS ÚLTIMAS MENSAGENS:
 """ + "\n".join([f"- {h.get('role', 'user')}: {h.get('content', '')[:150]}" for h in chat_history[-3:]])
@@ -368,12 +374,41 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 # Salvar que a contra-pergunta foi feita
                 db.save_contra_pergunta(session_id, entity_id, 'coltan', 'pendente')
         
+        # SISTEMA DE GRADUAÇÃO DE PISTAS - Requisitos mínimos de interações
+        PISTAS_REQUISITOS_INTERACOES = {
+            # Dr. Arnaldo (biologo) - 3 pistas graduais
+            'Sombra_Roxa': {'entity': 'biologo', 'min_interacoes': 2},
+            'Química_Coltan': {'entity': 'biologo', 'min_interacoes': 8, 'especial': True},  # Via contra-pergunta
+            'Conexão_Fazenda': {'entity': 'biologo', 'min_interacoes': 5},
+            
+            # Valdemar (fazendeiro) - 4 pistas graduais
+            'Poço_Artesiano': {'entity': 'fazendeiro', 'min_interacoes': 3},
+            'Fazenda_Fachada_Logística': {'entity': 'fazendeiro', 'min_interacoes': 6},
+            'Deputado_Venturi_Conexão': {'entity': 'fazendeiro', 'min_interacoes': 8},
+            'Conflito_Reserva_Indígena': {'entity': 'fazendeiro', 'min_interacoes': 10},
+            
+            # Pajé Yakamu (lider_indigena) - 3 pistas graduais
+            'Sombra_Montanha_Fogo': {'entity': 'lider_indigena', 'min_interacoes': 3},
+            'Trilha_Ancestrais_Mapa_Coltan': {'entity': 'lider_indigena', 'min_interacoes': 6},
+            'Homem_Terno_Venturi': {'entity': 'lider_indigena', 'min_interacoes': 9},
+            
+            # Podcaster (podcaster) - 2 pistas falsas
+            'Teoria_Ratanabá': {'entity': 'podcaster', 'min_interacoes': 2},
+            'Sombra_Roxa_É_Energia': {'entity': 'podcaster', 'min_interacoes': 5},
+            
+            # Coronel (coronel) - 3 pistas reveladoras
+            'Ratanabá_É_Desinformação': {'entity': 'coronel', 'min_interacoes': 3},
+            'Coltan_Projeto_Militar': {'entity': 'coronel', 'min_interacoes': 6},
+            'Gian_Segurança_Nacional': {'entity': 'coronel', 'min_interacoes': 9},
+            
+            # Deputado Venturi (politico) - confissão final
+            'Confissão_Venturi': {'entity': 'politico', 'min_interacoes': 10}
+        }
+        
         if not eh_saudacao and len(message.strip()) > 5:
             for p in ent.get('pistas_chave', []):
                 # Pista especial "Química_Coltan" - APENAS VIA CONTRA-PERGUNTA
                 if p == 'Química_Coltan':
-                    # RESTRIÇÃO: Só adiciona se respondeu "Sim" à contra-pergunta
-                    # (após 8+ interações e ter coletado Sombra_Roxa + Conexão_Fazenda)
                     respondeu_sim = data.get('resposta_contra_pergunta') == 'sim'
                     
                     if respondeu_sim:
@@ -381,6 +416,22 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                         db.save_contra_pergunta(session_id, entity_id, 'coltan', 'sim')
                         print(f"🔬 Pista Química_Coltan detectada via contra-pergunta!")
                     continue
+                
+                # VERIFICAR REQUISITO DE INTERAÇÕES para esta pista
+                req = PISTAS_REQUISITOS_INTERACOES.get(p)
+                if req:
+                    # Verificar se é a entidade correta
+                    if req['entity'] != entity_id:
+                        continue
+                    
+                    # Verificar se tem interações mínimas
+                    if interaction_count < req['min_interacoes']:
+                        print(f"⏳ Pista {p} ainda não disponível: {interaction_count}/{req['min_interacoes']} interações")
+                        continue
+                    
+                    # Verificar se já foi coletada (não mostrar novamente)
+                    if p in pistas_coletadas:
+                        continue
                 
                 # Usar palavras-chave alternativas para detecção flexível
                 keywords = PISTAS_KEYWORDS.get(p, [p.replace('_', ' ').lower()])
@@ -404,7 +455,11 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 
                 if detectado and p not in found:
                     found.append(p)
-                    print(f"✅ Pista detectada: {p}")
+                    print(f"✅ Pista {p} detectada (interação {interaction_count})")
+                    
+                # LIMITE: Máximo 1 pista por resposta (não dar tudo de uma vez)
+                if len(found) >= 1:
+                    break
 
         # NOTE: não coletamos automaticamente — o frontend pode pedir para "coletar" uma pista
         return jsonify({
@@ -456,10 +511,17 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
             req_enigma = entidades.ENTIDADES_DA_AMAZONIA[ent['id']].get('requisito_enigma')
             if req_enigma and req_enigma in enigmas_resolvidos:
                 liberado = True
+            # NOVO: Verificar se requisito é desbloquear outro personagem
             elif not liberado:
                 reqs = ent.get('requisito_desbloqueio', [])
                 if reqs:
-                    liberado = all(r in pistas for r in reqs)
+                    # Se requisito é ID de personagem, verificar se foi desbloqueado
+                    if len(reqs) == 1 and reqs[0] in ['podcaster', 'fazendeiro', 'lider_indigena']:
+                        if reqs[0] == 'podcaster' and 'desbloquear_podcaster' in enigmas_resolvidos:
+                            liberado = True
+                    else:
+                        # Requisito normal por pistas
+                        liberado = all(r in pistas for r in reqs)
             
             retorno.append({**ent, 'liberado': liberado})
         

@@ -46,6 +46,28 @@ Sou Yakamu, guardião das histórias do meu povo. Você vem com perguntas, imagi
 
 Muitos vêm aqui. Poucos ouvem de verdade. Prove que você é diferente. Pergunte com respeito, e talvez eu compartilhe o que sei.""",
             
+            'podcaster': """*Falcão fala rápido e energético, quase sem respirar*
+
+E AÍ, GALERA! Bem-vindos ao ENCRUZILHADAS DO OCULTO! Eu sou o Jonas Falcão e VOCÊS NÃO VÃO ACREDITAR no que eu descobri!
+
+*gesticula exageradamente*
+
+O desaparecimento do Gian Kretzl? RATANABÁ! Cidade perdida! Tecnologia alienígena! TUDO se conecta!
+
+Quer as PROVAS BOMBÁSTICAS? Me pergunta QUALQUER COISA sobre essa conspiração épica!""",
+            
+            'coronel': """*Coronel Augusto te encara com olhar penetrante*
+
+Identificação.
+
+*pausa calculada*
+
+Coronel Augusto Ferreira, Segurança Nacional. Operações classificadas na região amazônica.
+
+Antes que pergunte: não, não vou confirmar ou negar teorias da conspiração sobre cidades perdidas. Isso é desinformação.
+
+Faça suas perguntas. Responderei o que for... apropriado.""",
+            
             'politico': """*Deputado Venturi oferece um sorriso político calculado*
 
 Olá! Sempre um prazer receber visitantes interessados no desenvolvimento da Amazônia.
@@ -302,6 +324,236 @@ Mas para eles, é só "recursos naturais". Para desenvolver. Para lucrar. Como s
 Sei sobre o Mapa da Montanha de Fogo, a pedra sagrada (Coltan), e o homem de terno de Brasília.
 
 Pergunte-me sobre nossa terra, a Sombra Roxa, o mapa secreto ou o Gian. Posso confiar em você?"""
+    
+    elif entity_id == 'podcaster':
+        # Perguntas sobre Ratanabá
+        if contains_any(msg, ['ratanabá', 'cidade', 'perdida', 'lendária', 'atlântida', 'civilização', 'antiga']):
+            return choose_varied_response([
+                """*Falcão gesticula freneticamente*
+
+RATANABÁ! A CIDADE PERDIDA DA AMAZÔNIA! Galera, isso é GIGANTE!
+
+Uma civilização avançadíssima que existiu há 450 milhões de anos! Com tecnologia que a ciência NÃO consegue explicar!
+
+*bate na mesa*
+
+O Gian estava INVESTIGANDO ISSO! Ele descobriu que a reserva indígena fica EXATAMENTE sobre as ruínas! Por isso querem a terra!
+
+É ÓBVIO que existe algo LÁ EMBAIXO! O governo SABE e está ESCONDENDO!""",
+
+                """*fala rápido*
+
+Olha, eu tenho FONTES! Geólogos anônimos, satélites, TUDO!
+
+Ratanabá não é mito! Há evidências de estruturas subterrâneas gigantescas! Pirâmides invertidas! Tecnologia de cristal!
+
+*baixa voz conspiratória*
+
+O Gian estava próximo de PROVAR tudo isso. E aí ele sumiu. Coincidência? EU ACHO QUE NÃO!"""
+            ])
+        
+        # Perguntas sobre Gian/desaparecimento
+        elif contains_any(msg, ['gian', 'desapareceu', 'sumiu', 'morte', 'morto', 'assassinato', 'mataram']):
+            return choose_varied_response([
+                """*voz dramática*
+
+O GIAN SABIA DEMAIS! Ele descobriu o Coltan, a conspiração, E Ratanabá!
+
+*puxa papéis*
+
+Olha aqui: última mensagem dele para mim foi "Falcão, encontrei algo IMENSO. Não é só garimpo. É uma OPERAÇÃO MILITAR."
+
+Três dias depois? SUMIU! Isso é SILENCIAMENTO! O governo não quer que a verdade sobre Ratanabá venha à tona!""",
+
+                """*gesticula*
+
+Gian Kretzl era meu AMIGO! Um jornalista SÉRIO que investigava a verdade!
+
+Ele me disse: "Falcão, você estava certa sobre algo grande aqui." E mandou coordenadas! Coordenadas que apontam para RATANABÁ!
+
+Depois disso? DESAPARECIDO! Apagaram ele! Porque ele ia revelar TUDO!"""
+            ])
+        
+        # Perguntas sobre conspiração/governo
+        elif contains_any(msg, ['conspiração', 'governo', 'militar', 'segredo', 'esconde', 'oculta', 'cover-up']):
+            return """*voz de conspiração*
+
+O GOVERNO BRASILEIRO SABE DE RATANABÁ! Operações militares secretas na região! Helicópteros sem identificação!
+
+O Coronel Augusto? Ele é parte disso! "Segurança Nacional" é código para "esconder a verdade"!
+
+*bate na mesa*
+
+Eles usam a operação de Coltan como FACHADA! O verdadeiro objetivo é CONTROLAR o acesso a Ratanabá! Tecnologia antiga vale TRILHÕES!"""
+        
+        # Perguntas sobre Coltan (conexão com Ratanabá)
+        elif contains_any(msg, ['coltan', 'mineral', 'tecnologia', 'aliens', 'alienígena']):
+            return """*olhos arregalados*
+
+O Coltan é só a PONTA DO ICEBERG!
+
+Sabe por que tem tanto desse mineral EXATAMENTE onde ficam as ruínas de Ratanabá? Porque a civilização antiga USAVA essa tecnologia!
+
+Eles tinham dispositivos de cristal-coltan que manipulavam ENERGIA! E o governo descobriu! Por isso a conspiração toda!"""
+        
+        # Perguntas sobre provas/evidências
+        elif contains_any(msg, ['prova', 'evidência', 'verdade', 'real', 'existe', 'comprova']):
+            return """*puxa tablet freneticamente*
+
+PROVAS?! EU TENHO PROVAS!
+
+Imagens de satélite com anomalias geométricas! Depoimentos de indígenas sobre "cidades dos ancestrais"! Mapas antigos com símbolos inexplicáveis!
+
+*gesticula*
+
+E o MAIOR indício? O governo colocou a área como SEGURANÇA NACIONAL! Por que tanto segredo se é "só floresta"?!"""
+        
+        # Perguntas sobre podcaster/canal
+        elif contains_any(msg, ['você', 'podcast', 'verdades ocultas', 'canal', 'trabalha', 'faz']):
+            return """*sorriso orgulhoso*
+
+VERDADES OCULTAS é o podcast DE INVESTIGAÇÃO mais ouvido do Brasil! 2 milhões de inscritos!
+
+Eu exponho o que a MÍDIA TRADICIONAL tem medo de falar! Ratanabá, conspirações governamentais, tecnologia suprimida!
+
+O Gian me respeitava porque eu não tenho medo da VERDADE! Por isso me procurou antes de desaparecer!"""
+        
+        # Pergunta genérica
+        else:
+            return """Eu sou Jonas Falcão, apresentador do ENCRUZILHADAS DO OCULTO!
+
+*animado*
+
+Investigo Ratanabá, a cidade perdida REAL! O Gian descobriu a conexão com o Coltan e sumiu! O governo ESCONDE TUDO!
+
+Pergunte sobre Ratanabá, o Gian, as provas, a conspiração militar! VAMOS EXPOR A VERDADE!"""
+    
+    elif entity_id == 'coronel':
+        # Perguntas sobre Ratanabá
+        if contains_any(msg, ['ratanabá', 'cidade', 'perdida', 'ruins', 'civilização', 'antiga', 'atlântida']):
+            return choose_varied_response([
+                """*expressão irritada*
+
+Ratanabá é DESINFORMAÇÃO. Uma fantasia criada por podcasters sensacionalistas.
+
+*tom firme*
+
+Não existe cidade perdida. Não existe tecnologia alienígena. É teoria da conspiração que atrapalha operações reais de segurança nacional.
+
+Meu trabalho é proteger a soberania brasileira na Amazônia. Não caçar fantasmas.""",
+
+                """*suspira com impaciência*
+
+Mais um perguntando sobre essa lenda urbana.
+
+Olha, fizemos varredura completa da região. Satélite, radar de penetração, equipes em solo. NADA. Zero. Floresta comum.
+
+A "teoria Ratanabá" é cortina de fumaça para atividades criminosas reais que estamos combatendo."""
+            ])
+        
+        # Perguntas sobre operação militar/missão
+        elif contains_any(msg, ['operação', 'militar', 'missão', 'segurança', 'nacional', 'secreta', 'faz', 'trabalho']):
+            return choose_varied_response([
+                """*cruza braços*
+
+Minha missão é CLASSIFICADA. Mas posso dizer: combate a atividades ilegais na região amazônica.
+
+*olhar penetrante*
+
+Garimpo ilegal, desmatamento, tráfico. A Amazônia é zona de alto risco para a soberania nacional.
+
+Não posso revelar detalhes operacionais. Ordens são ordens.""",
+
+                """Segurança Nacional. Proteção de fronteiras. Controle de áreas estratégicas.
+
+*tom seco*
+
+Há interesses estrangeiros querendo pedaços da Amazônia. Minerais raros, biodiversidade, água. Meu trabalho é garantir que isso não aconteça.
+
+Detalhes são confidenciais. Próxima pergunta."""
+            ])
+        
+        # Perguntas sobre Gian
+        elif contains_any(msg, ['gian', 'jornalista', 'desapareceu', 'sumiu', 'matou', 'morte']):
+            return choose_varied_response([
+                """*expressão neutra demais*
+
+Gian Kretzl. Jornalista investigativo. Estava na região durante minhas operações.
+
+*pausa*
+
+Foi avisado para não entrar em áreas restritas. Ignorou. Pessoas imprudentes sofrem... acidentes.
+
+Não tenho mais informações sobre o paradeiro dele.""",
+
+                """*tom frio*
+
+Desaparecimentos acontecem na selva. É um ambiente hostil.
+
+O Sr. Kretzl estava investigando atividades perigosas. Foi alertado. Não escutou.
+
+*olhar cortante*
+
+Não somos babás de civis teimosos. Se ele se meteu em problemas, não é responsabilidade militar."""
+            ])
+        
+        # Perguntas sobre Coltan/garimpo
+        elif contains_any(msg, ['coltan', 'garimpo', 'mineral', 'ilegal', 'extração', 'crime']):
+            return """*ajusta postura*
+
+Coltan é mineral estratégico. Usado em eletrônicos, equipamentos militares. Vale bilhões.
+
+*tom grave*
+
+Há extração ilegal na região. Minha missão inclui CONTROLAR isso. Não eliminar - controlar.
+
+Recursos estratégicos precisam de gestão adequada. Não posso elaborar."""
+        
+        # Perguntas sobre ordens/superior
+        elif contains_any(msg, ['ordem', 'quem manda', 'superior', 'chefe', 'comandante', 'brasília']):
+            return """*irritado*
+
+Recebo ordens de BRASÍLIA. Alto escalão. Informação classificada.
+
+*voz firme*
+
+Sou soldado. Não questiono ordens. Cumpro missões. Minha lealdade é com o Brasil, não com indivíduos.
+
+Próxima pergunta."""
+        
+        # Perguntas sobre podcaster/Falcão
+        elif contains_any(msg, ['falcão', 'jonas', 'podcast', 'encruzilhadas', 'conspiração', 'teorias']):
+            return """*revira olhos*
+
+Jonas Falcão. Desinformador profissional.
+
+Ratanabá, aliens, tecnologia perdida... LIXO. Tudo invenção para ganhar visualizações.
+
+*tom sério*
+
+Pessoas como ela atrapalham investigações reais com teorias conspiratórias. Deveria ser processada por disseminação de fake news."""
+        
+        # Perguntas diretas/confronto
+        elif contains_any(msg, ['verdade', 'esconde', 'mente', 'culpado', 'sabe', 'encobrir']):
+            return """*olhar penetrante*
+
+Cuidado com acusações.
+
+*voz baixa e ameaçadora*
+
+Estou aqui representando a SEGURANÇA NACIONAL do Brasil. Questionar isso é questionar a soberania.
+
+Você quer respostas? Procure em outro lugar. Não sou fonte de informação pública."""
+        
+        # Pergunta genérica
+        else:
+            return """Coronel Augusto Ferreira. Forças Armadas Brasileiras. Operações classificadas.
+
+*expressão dura*
+
+Não discuto Ratanabá - é desinformação. Minha missão é proteger interesses nacionais.
+
+Perguntas apropriadas serão respondidas. Teorias conspiratórias serão ignoradas."""
     
     elif entity_id == 'politico':
         # Perguntas sobre Sombra Roxa

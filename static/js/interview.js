@@ -239,6 +239,7 @@ class InterviewSystem {
     this.desafioAtual = null;
     this.respostaSelecionada = null;
     this.audioInitialized = false;
+    this.pistasColetadas = []; // Array de pistas já coletadas pelo grupo
     
     this.initElements();
     this.initExcalibur();
@@ -664,6 +665,9 @@ class InterviewSystem {
     if (this.entityName) this.entityName.textContent = entity.nome;
     if (this.entityEmoji) this.entityEmoji.textContent = entity.emoji || '❓';
     if (this.entityDiscipline) this.entityDiscipline.textContent = entity.disciplina;
+    
+    // NOVO: Limpar dicas ao trocar de personagem
+    this.limparDicasAnteriores();
     
     // Carregar desafios desta entidade
     this.carregarDesafios(entity.id);
@@ -1272,6 +1276,17 @@ Processamento de COLTAN - Columbita-Tantalita.
     });
     
     this.dicasArea.style.display = dicas.length > 0 ? 'block' : 'none';
+  }
+  
+  limparDicasAnteriores() {
+    // Limpar área de dicas ao trocar de personagem
+    if (this.dicasArea) {
+      this.dicasArea.style.display = 'none';
+    }
+    if (this.dicasList) {
+      this.dicasList.innerHTML = '';
+    }
+    console.log('🧹 Dicas do personagem anterior limpas');
   }
   
   abrirDesafio() {
