@@ -325,7 +325,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
             resposta_anterior = db.get_contra_pergunta_feita(session_id, entity_id, 'coltan')
             
             # Requisitos: ter explorado bem o mistério (2 pistas coletadas)
-            tem_base = 'Sombra_Roxa' in pistas_coletadas and 'Gado_Não_Bebe_Rio' in pistas_coletadas
+            tem_base = 'Sombra_Roxa' in pistas_coletadas and 'Conexão_Fazenda' in pistas_coletadas
             
             # Se ainda não fez a contra-pergunta E tem as pistas base
             if resposta_anterior is None and tem_base:

@@ -13,11 +13,34 @@ class SoundManager {
     
     // Definir configurações de áudio
     this.audioConfig = {
+      // Sons ambiente por personagem
+      lab_ambiente: { path: '/static/audio/lab_ambiente.mp3', volume: 0.25, loop: true },
+      fazenda_ambiente: { path: '/static/audio/fazenda_ambiente.mp3', volume: 0.25, loop: true },
+      aldeia_ambiente: { path: '/static/audio/aldeia_ambiente.mp3', volume: 0.25, loop: true },
+      podcast_ambiente: { path: '/static/audio/podcast_ambiente.mp3', volume: 0.30, loop: true },
+      seguranca_ambiente: { path: '/static/audio/seguranca_ambiente.mp3', volume: 0.25, loop: true },
+      sala_situacao: { path: '/static/audio/sala_situacao.mp3', volume: 0.20, loop: true },
+      
+      // Efeitos sonoros
       floresta: { path: '/static/audio/ambiente_floresta.mp3', volume: 0.25 },
       pistaColetada: { path: '/static/audio/pista_coletada.mp3', volume: 0.6 },
+      clue_collected: { path: '/static/audio/clue_collected.mp3', volume: 0.6 },
       alerta: { path: '/static/audio/alerta_critico.mp3', volume: 0.65 },
       estatica: { path: '/static/audio/estatica_radio.mp3', volume: 0.45 },
-      revelacao: { path: '/static/audio/revelacao_final.mp3', volume: 0.75 }
+      revelacao: { path: '/static/audio/revelacao_final.mp3', volume: 0.75 },
+      enigma_unlocked: { path: '/static/audio/enigma_unlocked.mp3', volume: 0.7 },
+      character_unlocked: { path: '/static/audio/character_unlocked.mp3', volume: 0.7 },
+      final_victory: { path: '/static/audio/final_victory.mp3', volume: 0.8 }
+    };
+    
+    // Mapear personagens para sons ambiente
+    this.ambienteMap = {
+      'biologo': 'lab_ambiente',
+      'fazendeiro': 'fazenda_ambiente',
+      'lider_indigena': 'aldeia_ambiente',
+      'podcaster': 'podcast_ambiente',
+      'coronel': 'seguranca_ambiente',
+      'politico': 'sala_situacao'
     };
   }
   
@@ -71,7 +94,7 @@ class SoundManager {
     }
   }
   
-  play(soundName) {
+  play(soundName, loop = false) {
     // Verificar se áudio está habilitado
     if (!this.audioEnabled) {
       console.log(`🔇 Áudio desabilitado, não tocando ${soundName}`);
@@ -84,6 +107,9 @@ class SoundManager {
     }
     
     if (this.sounds[soundName]) {
+      // Configurar loop (apenas para sons ambiente)
+      this.sounds[soundName].loop = loop;
+      
       // Resetar e tocar
       this.sounds[soundName].currentTime = 0;
       
@@ -119,12 +145,46 @@ class SoundManager {
       sound.pause();
       sound.currentTime = 0;
     });
+    this.ambientePlaying = false;
   }
   
   startAmbiente() {
     if (!this.ambientePlaying) {
-      this.play('floresta');
+      this.play('floresta', true);
       this.ambientePlaying = true;
+    }
+  }
+  
+  startAmbientePersonagem(personagemId) {
+    // Parar qualquer som ambiente tocando
+    this.stopAll();
+    
+    // Pegar o som ambiente específico do personagem
+    const ambienteSom = this.ambienteMap[personagemId];
+    
+    if (ambienteSom && this.sounds[ambienteSom]) {
+      console.log(`🎵 Iniciando som ambiente: ${ambienteSom} para ${personagemId}`);
+      this.sounds[ambienteSom].loop = true;
+      this.sounds[ambienteSom].currentTime = 0;
+      
+      const playPromise = this.sounds[ambienteSom].play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            this.ambientePlaying = true;
+            console.log(`✅ Som ambiente ${ambienteSom} tocando`);
+          })
+          .catch(e => {
+            console.warn(`⚠️ Não foi possível tocar ${ambienteSom}:`, e.message);
+            // Fallback para som genérico de floresta
+            this.startAmbiente();
+          });
+      }
+    } else {
+      console.log(`⚠️ Som ambiente não encontrado para ${personagemId}, usando genérico`);
+      // Fallback para som genérico
+      this.startAmbiente();
     }
   }
   
@@ -139,6 +199,8 @@ const soundManager = new SoundManager();
 
 class InterviewSystem {
   constructor() {
+    console.log('🎮 Iniciando Interview System...');
+    
     this.currentEntity = null;
     this.previousEntitiesState = {};
     this.excaliburEngine = null;
@@ -154,6 +216,8 @@ class InterviewSystem {
     this.initExcalibur();
     this.loadEntities();
     this.setupAudioInit();
+    
+    console.log('✅ Interview System inicializado!');
   }
   
   // Inicializar áudio após primeira interação do usuário
@@ -220,7 +284,11 @@ class InterviewSystem {
   }
 
   initElements() {
+    console.log('🔧 Inicializando elementos do DOM...');
+    
     this.entitiesGrid = document.getElementById('entities-grid');
+    console.log('  Grid de entidades:', this.entitiesGrid ? '✅ Encontrado' : '❌ NÃO ENCONTRADO');
+    
     this.chatArea = document.getElementById('chat-area');
     this.chatLog = document.getElementById('chat-log');
     this.entityName = document.getElementById('entity-name');
@@ -349,9 +417,17 @@ class InterviewSystem {
   }
 
   async loadEntities() {
+    console.log('🔍 Carregando entidades...');
     try {
       const res = await fetch('/api/entities');
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const data = await res.json();
+      console.log('✅ Entidades carregadas:', data.entities.length, 'fontes encontradas');
+      console.log('📊 Detalhes:', data.entities.map(e => `${e.emoji} ${e.nome} (${e.liberado ? 'Liberado' : 'Bloqueado'})`));
       
       this.updatePistasDisplay(data.pistas || []);
       this.renderEntities(data.entities);
@@ -362,19 +438,51 @@ class InterviewSystem {
         this.previousEntitiesState[e.id] = { liberado: e.liberado };
       });
     } catch (error) {
-      console.error('Erro ao carregar entidades:', error);
+      console.error('❌ Erro ao carregar entidades:', error);
+      
+      // Mostrar mensagem de erro no grid
+      if (this.entitiesGrid) {
+        this.entitiesGrid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;">
+            <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+            <p style="font-size: 18px; margin-bottom: 10px;">Erro ao carregar fontes</p>
+            <p style="font-size: 14px; color: #888;">${error.message}</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; border: none; border-radius: 6px; color: white; cursor: pointer;">
+              🔄 Recarregar Página
+            </button>
+          </div>
+        `;
+      }
     }
   }
 
   renderEntities(entities) {
-    if (!this.entitiesGrid) return;
+    if (!this.entitiesGrid) {
+      console.error('❌ Grid de entidades não encontrado!');
+      return;
+    }
     
+    console.log(`🎨 Renderizando ${entities.length} entidades no grid...`);
     this.entitiesGrid.innerHTML = '';
     
-    entities.forEach(entity => {
+    if (entities.length === 0) {
+      this.entitiesGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #888;">
+          <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+          <p>Nenhuma fonte encontrada</p>
+          <p style="font-size: 12px; margin-top: 10px;">Verifique o console (F12) para mais detalhes</p>
+        </div>
+      `;
+      return;
+    }
+    
+    entities.forEach((entity, index) => {
       const card = this.createEntityCard(entity);
       this.entitiesGrid.appendChild(card);
+      console.log(`  ${index + 1}. ${entity.emoji} ${entity.nome} - ${entity.liberado ? '✅ Disponível' : '🔒 Bloqueado'}`);
     });
+    
+    console.log('✅ Entidades renderizadas com sucesso!');
   }
 
   createEntityCard(entity) {
@@ -522,8 +630,8 @@ class InterviewSystem {
     // Carregar histórico do banco de dados
     await this.loadChatHistory(entity.id);
     
-    // Iniciar som ambiente da floresta
-    soundManager.startAmbiente();
+    // Iniciar som ambiente específico do personagem
+    soundManager.startAmbientePersonagem(entity.id);
     
     if (this.entityName) this.entityName.textContent = entity.nome;
     if (this.entityEmoji) this.entityEmoji.textContent = entity.emoji || '❓';

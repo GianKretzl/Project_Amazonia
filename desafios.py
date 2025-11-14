@@ -38,7 +38,7 @@ DESAFIOS = {
         'opcoes': [
             'A) As algas se alimentam diretamente dos químicos tóxicos',
             'B) Os químicos matam predadores das algas, permitindo crescimento descontrolado',
-            'C) Excesso de nutrientes (nitrogênio e fósforo) causa crescimento explosivo de algas que consomem oxigênio',
+            'C) O excesso de nutrientes (nitrogênio e fósforo) causa crescimento explosivo de algas que consomem oxigênio',
             'D) As algas mutam geneticamente e se tornam tóxicas'
         ],
         'resposta_correta': 'C',

@@ -7,20 +7,20 @@ ENIGMAS = {
     # Enigma para desbloquear Valdemar (após coletar pistas do Dr. Arnaldo)
     'desbloquear_fazendeiro': {
         'id': 'desbloquear_fazendeiro',
-        'titulo': 'Enigma: O Mistério do Gado',
+        'titulo': 'Enigma: A Conexão da Fazenda',
         'contexto': 'Dr. Arnaldo mencionou algo intrigante: "Por que o gado do Valdemar não morre de sede, com o rio venenoso ao lado?" Pense nisso junto com as outras pistas...',
-        'pergunta': 'O gado da Fazenda Nova Fronteira não bebe água do Rio Dourado contaminado. Mas então, de onde vem a água para os animais? E por que isso é suspeito?',
+        'pergunta': 'A análise do Dr. Arnaldo (PISTA-C01 e C02) prova que a \'Sombra Roxa\' é poluição industrial de Coltan. A PISTA-C03 mostra que o dono da Fazenda Nova Fronteira, Valdemar, tem uma fonte de água alternativa para o gado. O que essa atitude prova?',
         'tipo': 'multipla_escolha',
         'opcoes': [
-            'A) Valdemar compra caminhões-pipa de água potável todos os dias',
-            'B) Existe um poço artesiano antigo na propriedade',
-            'C) O gado bebe do rio mesmo - eles são resistentes à toxina',
-            'D) Valdemar sabe que o rio está contaminado e tem outra fonte de água - provando que conhece a operação ilegal'
+            'A) Que Valdemar é um fazendeiro cuidadoso e prefere água de poço',
+            'B) Que o gado dele é resistente à toxina',
+            'C) Que Valdemar SABE que o rio está envenenado e, portanto, está envolvido na operação que causa a poluição',
+            'D) Que o rio está contaminado por causas naturais, e Valdemar apenas se adaptou'
         ],
-        'resposta_correta': 'D',
-        'explicacao': 'Exatamente! Se Valdemar tem uma fonte alternativa de água para o gado, significa que ele SABE que o rio está envenenado. E se ele sabe disso, está envolvido na operação que contamina o rio. A fazenda é uma fachada para mineração ilegal de Coltan!',
+        'resposta_correta': 'C',
+        'explicacao': 'Exatamente! Se Valdemar tem uma fonte alternativa de água, significa que ele SABE que o rio está envenenado com a química do Coltan. Ele não é uma vítima, ele é cúmplice. A fazenda é o ponto de partida da investigação!',
         'recompensa_entidade': 'fazendeiro',
-        'requer_pistas': ['Química_Coltan', 'Sombra_Roxa', 'Gado_Não_Bebe_Rio']
+        'requer_pistas': ['Química_Coltan', 'Sombra_Roxa', 'Conexão_Fazenda']
     },
     
     # Enigma para desbloquear Pajé Yakamu (após coletar pistas do Valdemar)
@@ -42,9 +42,9 @@ ENIGMAS = {
         'requer_pistas': ['Fazenda_Fachada_Logística', 'Conflito_Reserva_Indígena']
     },
     
-    # Enigma para desbloquear Deputado Venturi (após coletar pistas do Pajé)
-    'desbloquear_politico': {
-        'id': 'desbloquear_politico',
+    # Enigma para desbloquear Podcaster (após coletar pistas do Pajé)
+    'desbloquear_podcaster': {
+        'id': 'desbloquear_podcaster',
         'titulo': 'Enigma: A Rede de Poder',
         'contexto': 'O Pajé mencionou mapas ancestrais com Coltan e um "homem de terno que veio de Brasília". Analise toda a cadeia de eventos...',
         'pergunta': 'Para essa operação funcionar, seria necessário: (1) conhecer mapas indígenas secretos, (2) registrar fazenda em área estratégica, (3) evitar fiscalizações ambientais, (4) ter capital para equipamentos. Quem conecta TODAS essas peças?',
@@ -56,9 +56,28 @@ ENIGMAS = {
             'D) Uma organização criminosa local com apoio de garimpeiros'
         ],
         'resposta_correta': 'C',
-        'explicacao': 'Excelente dedução! Apenas alguém com poder em Brasília pode: aprovar registros de propriedade fraudulentos, bloquear ações da FUNAI e IBAMA, acessar mapas de estudos governamentais sobre recursos minerais, e ter capital político para "convencer" autoridades locais. O Deputado Venturi é o MASTERMIND!',
-        'recompensa_entidade': 'politico',
+        'explicacao': 'Excelente dedução! Apenas alguém com poder em Brasília pode: aprovar registros de propriedade fraudulentos, bloquear ações da FUNAI e IBAMA, acessar mapas de estudos governamentais sobre recursos minerais, e ter capital político para "convencer" autoridades locais. Mas antes de confrontá-lo... há uma distração no caminho.',
+        'recompensa_entidade': 'podcaster',
         'requer_pistas': ['Trilha_Ancestrais_Mapa_Coltan', 'Homem_Terno_Venturi']
+    },
+    
+    # Enigma para desbloquear Deputado Venturi (após coletar pistas do Pajé)
+    'desbloquear_politico': {
+        'id': 'desbloquear_politico',
+        'titulo': 'Enigma: A Conspiração Completa',
+        'contexto': 'O Coronel Silva revelou a verdade: Ratanabá é mentira, o Coltan é para armas militares, e Gian foi eliminado por "segurança nacional". Agora você tem provas suficientes...',
+        'pergunta': 'Você reuniu evidências devastadoras: (1) Poluição química de Coltan, (2) Fazenda-fachada, (3) Contrabando militar, (4) Desinformação orquestrada. Quem é o CÉREBRO por trás de toda essa operação?',
+        'tipo': 'multipla_escolha',
+        'opcoes': [
+            'A) O Coronel Silva - ele comanda a operação no terreno',
+            'B) Valdemar - ele é o verdadeiro dono de tudo',
+            'C) Deputado Venturi - político com poder para orquestrar cada peça da conspiração',
+            'D) Uma organização internacional que usa Venturi como fantoche'
+        ],
+        'resposta_correta': 'C',
+        'explicacao': 'CORRETO! Deputado Venturi é o MASTERMIND. Ele tem: poder legislativo para bloquear fiscalizações, conexões militares para o projeto secreto, capital para financiar a operação, e influência política para eliminar Gian como "risco à segurança nacional". Hora do confronto final.',
+        'recompensa_entidade': 'politico',
+        'requer_pistas': ['Coltan_Projeto_Militar', 'Ratanabá_É_Desinformação', 'Gian_Segurança_Nacional']
     }
 }
 
