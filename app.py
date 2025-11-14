@@ -261,17 +261,28 @@ def create_app():
    - Pajé: Poético+Sábio → "O rio conta histórias... os ancestrais sabiam..."
    - Venturi: Suave+Perigoso → "Acusações graves... mas já que você descobriu..."
 
+⚠️ REGRAS DE TAMANHO E REVELAÇÃO:
+- MÁXIMO: 1-2 parágrafos CURTOS (3-5 linhas cada)
+- NÃO revele todas as informações de uma vez
+- Faça o jogador trabalhar pelas respostas através de múltiplas perguntas
+- Seja misterioso e gradual, não um livro aberto
+- Evite explicações longas - seja direto mas mantenha o suspense
+
 ❌ NUNCA FAÇA:
+- Respostas longas com múltiplos parágrafos explicativos
+- Revelar 3-4 pistas diferentes em uma única resposta
 - "Isso é uma questão interessante, pode elaborar?"
 - Respostas vagas sem mencionar nada específico do jogo
 - Fingir não saber algo que SEU PERSONAGEM sabe
 - Desviar para temas genéricos de meio ambiente
 
 ✅ SEMPRE FAÇA:
+- Respostas CURTAS: máximo 1-2 parágrafos pequenos
+- Graduar informações: cada resposta revela 1 pista ou detalhe, não tudo
 - Conecte tudo a Gian Kretzl e o desaparecimento dele
 - Mencione pistas específicas (nomes com underscore: Sombra_Roxa, Química_Coltan, etc)
-- Mostre emoção do personagem
-- Sugira próximos passos ou perguntas
+- Mostre emoção do personagem em frases curtas
+- Termine com 1 frase de sugestão ou mistério
 
 CONTEXTO DAS ÚLTIMAS MENSAGENS:
 """ + "\n".join([f"- {h.get('role', 'user')}: {h.get('content', '')[:150]}" for h in chat_history[-3:]])
@@ -292,7 +303,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 resp = openai_client.chat.completions.create(
                     model=os.getenv('OPENAI_MODEL', 'gpt-4o-mini'),  # Melhor modelo
                     messages=messages,
-                    max_tokens=600,  # Mais espaço para respostas ricas
+                    max_tokens=250,  # REDUZIDO: forçar respostas curtas (1-2 parágrafos)
                     temperature=0.85  # Balanceado: criativo mas focado
                 )
                 assistant_reply = resp.choices[0].message.content.strip()
@@ -310,6 +321,26 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         reply_lower = assistant_reply.lower()
         message_lower = message.lower()
         
+        # Mapa de palavras-chave alternativas para detecção flexível
+        PISTAS_KEYWORDS = {
+            'Sombra_Roxa': ['sombra roxa', 'mancha roxa', 'proliferação roxa'],
+            'Química_Coltan': ['coltan', 'tântalo', 'nióbio', 'química do coltan', 'mercúrio'],
+            'Conexão_Fazenda': ['fazenda', 'valdemar', 'gado não bebe', 'conexão'],
+            'Poço_Artesiano': ['poço', 'poço artesiano', 'água limpa'],
+            'Fazenda_Fachada_Logística': ['fachada', 'logística', 'fazenda fachada', 'não dá lucro'],
+            'Deputado_Venturi_Conexão': ['venturi', 'deputado', 'político', 'brasília'],
+            'Conflito_Reserva_Indígena': ['reserva', 'terra indígena', 'demarcação', 'índios'],
+            'Sombra_Montanha_Fogo': ['montanha de fogo', 'montanha sagrada', 'ancestrais'],
+            'Trilha_Ancestrais_Mapa_Coltan': ['trilha', 'trilha dos ancestrais', 'mapa', 'memória'],
+            'Homem_Terno_Venturi': ['homem de terno', 'brasília', 'venturi'],
+            'Teoria_Ratanabá': ['ratanabá', 'atlântida', 'cidade perdida'],
+            'Sombra_Roxa_É_Energia': ['energia', 'cristais', 'portal'],
+            'Ratanabá_É_Desinformação': ['desinformação', 'mentira', 'ratanabá é falso'],
+            'Coltan_Projeto_Militar': ['militar', 'armas', 'projeto militar', 'contrabando'],
+            'Gian_Segurança_Nacional': ['gian', 'desapareceu', 'segurança nacional', 'neutralizado'],
+            'Confissão_Venturi': ['confissão', 'venturi confessa', 'admite']
+        }
+        
         # Só detectar pistas se a mensagem do usuário for relevante (mais de 5 caracteres e não for saudação)
         saudacoes = ['oi', 'olá', 'ola', 'hey', 'hi', 'hello', 'bom dia', 'boa tarde', 'boa noite']
         eh_saudacao = any(saudacao == message_lower.strip() for saudacao in saudacoes)
@@ -318,7 +349,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         contra_pergunta = None
         pistas_coletadas = db.get_pistas(session_id)
         
-        # Contra-pergunta apenas após 8 interações E ter coletado Sombra_Roxa E Gado_Não_Bebe_Rio
+        # Contra-pergunta apenas após 8 interações E ter coletado Sombra_Roxa E Conexão_Fazenda
         # Isso garante que o jogador explorou a conversa antes da revelação crítica
         if entity_id == 'biologo' and interaction_count >= 8:
             # Verificar se já fez a contra-pergunta
@@ -342,7 +373,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 # Pista especial "Química_Coltan" - APENAS VIA CONTRA-PERGUNTA
                 if p == 'Química_Coltan':
                     # RESTRIÇÃO: Só adiciona se respondeu "Sim" à contra-pergunta
-                    # (após 12+ interações e ter coletado Sombra_Roxa + Gado_Não_Bebe_Rio)
+                    # (após 8+ interações e ter coletado Sombra_Roxa + Conexão_Fazenda)
                     respondeu_sim = data.get('resposta_contra_pergunta') == 'sim'
                     
                     if respondeu_sim:
@@ -351,21 +382,29 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                         print(f"🔬 Pista Química_Coltan detectada via contra-pergunta!")
                     continue
                 
-                # Converter underscore para espaço e verificar
-                pista_formatada = p.replace('_', ' ').lower()
+                # Usar palavras-chave alternativas para detecção flexível
+                keywords = PISTAS_KEYWORDS.get(p, [p.replace('_', ' ').lower()])
                 
                 # Normalizar (remover acentos) para comparação mais flexível
-                pista_normalizada = remover_acentos(pista_formatada)
                 reply_normalizada = remover_acentos(reply_lower)
                 
-                # Verificar se a pista aparece com contexto suficiente (não só uma menção)
-                # Aceita tanto com acento quanto sem acento
-                if pista_formatada in reply_lower or pista_normalizada in reply_normalizada:
-                    # Contar quantas palavras da pista aparecem em frases completas
-                    palavras_pista = pista_formatada.split()
-                    if len(palavras_pista) >= 2 or len(reply_lower) > 100:  # Múltiplas palavras ou resposta longa
-                        found.append(p)
-                        print(f"✅ Pista detectada: {p}")
+                # Verificar se QUALQUER palavra-chave aparece na resposta
+                detectado = False
+                for keyword in keywords:
+                    keyword_normalizado = remover_acentos(keyword.lower())
+                    
+                    if keyword.lower() in reply_lower or keyword_normalizado in reply_normalizada:
+                        # Verificar contexto: resposta deve ser longa o suficiente (>80 chars)
+                        # OU a keyword deve ter múltiplas palavras
+                        tem_contexto = len(reply_lower) > 80 or len(keyword.split()) >= 2
+                        
+                        if tem_contexto:
+                            detectado = True
+                            break
+                
+                if detectado and p not in found:
+                    found.append(p)
+                    print(f"✅ Pista detectada: {p}")
 
         # NOTE: não coletamos automaticamente — o frontend pode pedir para "coletar" uma pista
         return jsonify({
@@ -440,7 +479,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 'titulo': '🟣 Sombra Roxa',
                 'descricao': 'Uma mancha roxa anormal detectada no Rio Dourado, vista de satélite. Foi GIAN quem deu esse nome.',
                 'detalhes': 'Dr. Arnaldo descobriu: é uma proliferação de cianobactérias tóxicas. Ela só prolifera na presença de dois químicos: mercúrio E um solvente industrial raríssimo usado para processar Coltan (Tântalo e Nióbio). O rio está MORRENDO.',
-                'conexoes': ['Química_Coltan', 'Gado_Não_Bebe_Rio', 'Sombra_Montanha_Fogo'],
+                'conexoes': ['Química_Coltan', 'Conexão_Fazenda', 'Sombra_Montanha_Fogo'],
                 'disciplina': 'Ciências',
                 'fonte': 'Dr. Arnaldo Silva',
                 'historia': 'ATO I: Dr. Arnaldo mostrou esta anomalia para Gian. Foi o início da investigação que custou a vida do repórter.'
@@ -455,14 +494,14 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 'importancia': '⭐ PISTA CRÍTICA - Revela QUE mineral está sendo extraído',
                 'historia': 'Esta foi a pista que fez Gian entender: não era sobre soja. Era sobre TECNOLOGIA.'
             },
-            'Gado_Não_Bebe_Rio': {
-                'titulo': '🐄 O Mistério do Gado',
-                'descricao': 'Dr. Arnaldo fez uma pergunta estranha: "Por que o gado do Valdemar não morre de sede, com o rio roxo logo ao lado?"',
-                'detalhes': 'Se o Rio Dourado está tóxico (Sombra Roxa), como o gado da Fazenda Nova Fronteira sobrevive? Valdemar sabe que o rio é venenoso. Mas COMO ele sabe? Gian foi investigar essa contradição.',
+            'Conexão_Fazenda': {
+                'titulo': '🐄 Conexão com a Fazenda',
+                'descricao': 'Dr. Arnaldo descobriu algo estranho sobre a Fazenda Nova Fronteira de Valdemar.',
+                'detalhes': 'A única grande propriedade rio acima é a Fazenda Nova Fronteira, de Valdemar. O gado dele tem acesso ao rio, mas não bebe dele. Por quê? Valdemar tem outra fonte. Isso prova duas coisas: 1. Ele SABE que o rio está contaminado. 2. Ele está envolvido. Gian foi até lá para confrontá-lo.',
                 'conexoes': ['Sombra_Roxa', 'Poço_Artesiano', 'Fazenda_Fachada_Logística'],
                 'disciplina': 'Ciências',
                 'fonte': 'Dr. Arnaldo Silva',
-                'historia': 'Esta pergunta levou Gian até Valdemar. Foi a ponte entre Ciências e Geografia.'
+                'historia': 'Esta descoberta levou Gian até Valdemar. Foi a ponte entre Ciências e Geografia.'
             },
             
             # ATO II: A FACHADA DO PROGRESSO (Geografia)
@@ -470,7 +509,7 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 'titulo': '💧 Poço Artesiano',
                 'descricao': 'Valdemar admite: "Puxo água de poço artesiano. Não sou burro de usar o rio!"',
                 'detalhes': 'CONTRADIÇÃO REVELADA: Valdemar sabe que o rio é tóxico. Ele chama de "Sombra Roxa" mas diz que os ÍNDIOS deram esse nome. MENTIRA! Foi GIAN quem deu o nome. Por que Valdemar mente sobre isso?',
-                'conexoes': ['Gado_Não_Bebe_Rio', 'Fazenda_Fachada_Logística'],
+                'conexoes': ['Conexão_Fazenda', 'Fazenda_Fachada_Logística'],
                 'disciplina': 'Geografia',
                 'fonte': '"Seu" Valdemar',
                 'historia': 'Valdemar se contradiz. Ele sabe MAIS do que deveria saber sobre a Sombra Roxa.'
@@ -534,9 +573,75 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
                 'historia': 'O vilão tem nome. Gian ia confrontá-lo. E desapareceu.'
             },
             
-            # CLÍMAX: O DOSSIÊ FINAL
+            # ATO IV: A CORTINA DE FUMAÇA (Desinformação)
+            'Teoria_Ratanabá': {
+                'titulo': '🔮 Teoria: Ratanabá Existe',
+                'descricao': 'Jonas "Falcão" Pereira afirma: "A Trilha não leva a Coltan - leva a RATANABÁ! A capital atlante perdida!"',
+                'detalhes': 'Segundo Falcão, a Sombra Roxa é energia de cristais antigos, a Trilha dos Ancestrais leva a portais dimensionais, e Venturi é um "Guardião de Ratanabá". Tudo isso parece... conveniente demais. Será verdade?',
+                'conexoes': ['Trilha_Ancestrais_Mapa_Coltan', 'Ratanabá_É_Desinformação'],
+                'disciplina': 'Pensamento Crítico',
+                'fonte': 'Jonas "Falcão" Pereira',
+                'tipo': 'PISTA FALSA',
+                'historia': 'Esta teoria é uma distração. Mas distração de quem? E por quê?'
+            },
+            'Sombra_Roxa_É_Energia': {
+                'titulo': '⚡ Teoria: Sombra Roxa é Energia',
+                'descricao': 'Falcão afirma: "A Sombra Roxa não é poluição - é ENERGIA dos cristais de Ratanabá vazando!"',
+                'detalhes': 'Segundo ele, o Dr. Arnaldo foi "comprado pelo governo" para esconder a verdade científica. A anomalia seria causada por tecnologia alienígena, não por química industrial. Mas isso contradiz as análises espectrométricas...',
+                'conexoes': ['Sombra_Roxa', 'Ratanabá_É_Desinformação'],
+                'disciplina': 'Pensamento Crítico',
+                'fonte': 'Jonas "Falcão" Pereira',
+                'tipo': 'PISTA FALSA',
+                'historia': 'Teorias conspiratórias podem ser mais atraentes que a verdade. Mas em quem confiar?'
+            },
+            
+            # ATO V: O BRAÇO ARMADO (O Plot Twist)
+            'Ratanabá_É_Desinformação': {
+                'titulo': '🎭 Ratanabá é Desinformação',
+                'descricao': 'Coronel Silva ri: "Ratanabá? É a MELHOR operação de desinformação que o Deputado já pagou!"',
+                'detalhes': 'REVELAÇÃO: Venturi VAZOU a teoria de Ratanabá para o Falcão propositalmente! Enquanto teoristas da conspiração procuram cidades perdidas, a operação de mineração ilegal acontece à luz do dia. O contato do Falcão com Gian foi ORQUESTRADO.',
+                'conexoes': ['Teoria_Ratanabá', 'Sombra_Roxa_É_Energia', 'Coltan_Projeto_Militar'],
+                'disciplina': 'Pensamento Crítico',
+                'fonte': 'Coronel Silva',
+                'importancia': '⭐ PISTA CRÍTICA - Expõe a manipulação de narrativa',
+                'historia': 'O ATO IV era um teste. Você caiu na armadilha ou desconfiou? Agora a verdade é revelada.'
+            },
+            'Coltan_Projeto_Militar': {
+                'titulo': '⚔️ Coltan para Projeto Militar Secreto',
+                'descricao': 'Coronel Silva revela: "Esse Coltan tem pureza 99,8%. O Deputado CONTRABANDEIA para programa militar SECRETO."',
+                'detalhes': 'Não é para celulares. É para armas de energia dirigida, lasers de pulso, sistemas antimíssil de próxima geração. Quem controla esse minério, controla o futuro BÉLICO. A Sombra Roxa é lixo tóxico intencional do processamento químico.',
+                'conexoes': ['Química_Coltan', 'Ratanabá_É_Desinformação', 'Confissão_Venturi'],
+                'disciplina': 'Operações / Ética',
+                'fonte': 'Coronel Silva',
+                'importancia': '⭐ PISTA CRÍTICA - Revela o MOTIVO REAL (armas, não lucro)',
+                'historia': 'Não era sobre dinheiro. Era sobre PODER. Gian entendeu isso... e pagou o preço.'
+            },
+            'Gian_Segurança_Nacional': {
+                'titulo': '💀 Gian e a "Segurança Nacional"',
+                'descricao': 'Coronel Silva, tom gelado: "Gian descobriu o projeto militar. Tinha AMOSTRAS que provavam. Ele se tornou um RISCO."',
+                'detalhes': 'Gian ignorou Ratanabá. Ele era INTELIGENTE. Descobriu o contrabando militar, tinha provas, ia denunciar. Mobilizar ONGs, imprensa internacional, CPI. Por isso foi "neutralizado" por "segurança nacional". O Coronel deixa ambíguo: ele está morto? Preso? Desaparecido?',
+                'conexoes': ['Coltan_Projeto_Militar', 'Confissão_Venturi'],
+                'disciplina': 'Ética / Direitos Humanos',
+                'fonte': 'Coronel Silva',
+                'importancia': '💀 PISTA DRAMÁTICA - O destino de Gian Kretzl',
+                'historia': 'Esta é a pista mais pesada. Gian não desapareceu por acidente. Foi uma decisão.'
+            },
+            
+            # ATO VI: O CONFRONTO (Clímax Final)
+            'Confissão_Venturi': {
+                'titulo': '🎯 A Confissão de Venturi',
+                'descricao': 'Ao ser confrontado com todas as pistas, Venturi RI e confessa TUDO.',
+                'detalhes': '"Gian era bom. Quase tão bom quanto eu. Ele achou que eu queria o Coltan para vender. Que tolo. O Coltan é só o MEIO. O que eu quero é o CONTROLE. Tântalo, Nióbio... isso é o FUTURO. Celulares, mísseis, satélites. Quem controla essa montanha, controla a tecnologia do mundo. A Amazônia não é o pulmão do mundo. É a BATERIA do mundo. E eu sou o dono da bateria. Gian quis parar o futuro. O futuro é implacável."',
+                'conexoes': ['Química_Coltan', 'Fazenda_Fachada_Logística', 'Trilha_Ancestrais_Mapa_Coltan', 'Coltan_Projeto_Militar', 'Gian_Segurança_Nacional'],
+                'disciplina': 'Interdisciplinar',
+                'fonte': 'Deputado Venturi',
+                'importancia': '🏆 PISTA FINAL - A verdade completa. O dossiê de Gian está completo.',
+                'historia': 'Ciências + Geografia + História = A CONSPIRAÇÃO REVELADA. Gian estava certo. E você provou.'
+            },
+            
+            # NOTA: Confissão_Venturi_Controle_Mundial foi renomeado para Confissão_Venturi (padronização com FLUXO_DO_JOGO.md)
             'Confissão_Venturi_Controle_Mundial': {
-                'titulo': '� A Confissão de Venturi',
+                'titulo': '🎯 [LEGADO] A Confissão de Venturi',
                 'descricao': 'Ao ser confrontado com todas as pistas, Venturi RI e confessa TUDO.',
                 'detalhes': '"Gian era bom. Quase tão bom quanto eu. Ele achou que eu queria o Coltan para vender. Que tolo. O Coltan é só o MEIO. O que eu quero é o CONTROLE. Tântalo, Nióbio... isso é o FUTURO. Celulares, mísseis, satélites. Quem controla essa montanha, controla a tecnologia do mundo. A Amazônia não é o pulmão do mundo. É a BATERIA do mundo. E eu sou o dono da bateria. Gian quis parar o futuro. O futuro é implacável."',
                 'conexoes': ['Química_Coltan', 'Fazenda_Fachada_Logística', 'Trilha_Ancestrais_Mapa_Coltan'],
@@ -554,14 +659,18 @@ CONTEXTO DAS ÚLTIMAS MENSAGENS:
         else:
             pistas_coletadas = []
         
-        detalhes = {}
+        # Retornar detalhes de TODAS as pistas, mas marcar quais foram coletadas
+        detalhes_completos = {}
         
-        for pista in pistas_coletadas:
-            if pista in pistas_info:
-                detalhes[pista] = pistas_info[pista]
+        for nome_pista, info_pista in pistas_info.items():
+            detalhes_completos[nome_pista] = {
+                **info_pista,
+                'coletada': nome_pista in pistas_coletadas
+            }
         
         return jsonify({
-            'pistas': detalhes,
+            'pistas': detalhes_completos,
+            'pistas_coletadas': pistas_coletadas,
             'total': len(pistas_coletadas)
         })
 

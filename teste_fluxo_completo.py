@@ -91,12 +91,12 @@ class TesteFluxoJogo:
         
         self.log_acao("💬 Jogador: 'E a fazenda rio acima?'", "INFO")
         time.sleep(0.3)
-        self.coletar_pista("Gado_Não_Bebe_Rio", "Dr. Arnaldo")
+        self.coletar_pista("Conexão_Fazenda", "Dr. Arnaldo")
         
         # Resolver enigma
         requisitos_ok = self.verificar_requisitos_enigma(
             "desbloquear_fazendeiro",
-            ["Química_Coltan", "Sombra_Roxa", "Gado_Não_Bebe_Rio"]
+            ["Química_Coltan", "Sombra_Roxa", "Conexão_Fazenda"]
         )
         
         if requisitos_ok:

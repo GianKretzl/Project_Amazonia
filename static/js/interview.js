@@ -10,16 +10,17 @@ class SoundManager {
     this.ambientePlaying = false;
     this.audioEnabled = true;
     this.failedAudios = [];
+    this.playCount = {}; // Contador de reproduções
     
     // Definir configurações de áudio
     this.audioConfig = {
-      // Sons ambiente por personagem
-      lab_ambiente: { path: '/static/audio/lab_ambiente.mp3', volume: 0.25, loop: true },
-      fazenda_ambiente: { path: '/static/audio/fazenda_ambiente.mp3', volume: 0.25, loop: true },
-      aldeia_ambiente: { path: '/static/audio/aldeia_ambiente.mp3', volume: 0.25, loop: true },
-      podcast_ambiente: { path: '/static/audio/podcast_ambiente.mp3', volume: 0.30, loop: true },
-      seguranca_ambiente: { path: '/static/audio/seguranca_ambiente.mp3', volume: 0.25, loop: true },
-      sala_situacao: { path: '/static/audio/sala_situacao.mp3', volume: 0.20, loop: true },
+      // Sons ambiente por personagem (máximo 2 vezes)
+      lab_ambiente: { path: '/static/audio/lab_ambiente.mp3', volume: 0.25, maxPlays: 2 },
+      fazenda_ambiente: { path: '/static/audio/fazenda_ambiente.mp3', volume: 0.25, maxPlays: 2 },
+      aldeia_ambiente: { path: '/static/audio/aldeia_ambiente.mp3', volume: 0.25, maxPlays: 2 },
+      podcast_ambiente: { path: '/static/audio/podcast_ambiente.mp3', volume: 0.30, maxPlays: 2 },
+      seguranca_ambiente: { path: '/static/audio/seguranca_ambiente.mp3', volume: 0.25, maxPlays: 2 },
+      sala_situacao: { path: '/static/audio/sala_situacao.mp3', volume: 0.20, maxPlays: 2 },
       
       // Efeitos sonoros
       floresta: { path: '/static/audio/ambiente_floresta.mp3', volume: 0.25 },
@@ -164,8 +165,35 @@ class SoundManager {
     
     if (ambienteSom && this.sounds[ambienteSom]) {
       console.log(`🎵 Iniciando som ambiente: ${ambienteSom} para ${personagemId}`);
-      this.sounds[ambienteSom].loop = true;
+      
+      // Inicializar contador se não existir
+      if (!this.playCount[ambienteSom]) {
+        this.playCount[ambienteSom] = 0;
+      }
+      
+      const maxPlays = this.audioConfig[ambienteSom]?.maxPlays || 2;
+      
+      // Resetar áudio
       this.sounds[ambienteSom].currentTime = 0;
+      
+      // Configurar evento de término para replay limitado
+      const onEnded = () => {
+        this.playCount[ambienteSom]++;
+        console.log(`🔁 ${ambienteSom} tocou ${this.playCount[ambienteSom]}/${maxPlays} vezes`);
+        
+        if (this.playCount[ambienteSom] < maxPlays) {
+          // Tocar novamente
+          this.sounds[ambienteSom].currentTime = 0;
+          this.sounds[ambienteSom].play().catch(e => console.warn(`⚠️ Erro no replay: ${e.message}`));
+        } else {
+          console.log(`✅ ${ambienteSom} completou ${maxPlays} reproduções`);
+          this.sounds[ambienteSom].removeEventListener('ended', onEnded);
+        }
+      };
+      
+      // Remover listener antigo se existir
+      this.sounds[ambienteSom].removeEventListener('ended', onEnded);
+      this.sounds[ambienteSom].addEventListener('ended', onEnded);
       
       const playPromise = this.sounds[ambienteSom].play();
       
@@ -173,7 +201,7 @@ class SoundManager {
         playPromise
           .then(() => {
             this.ambientePlaying = true;
-            console.log(`✅ Som ambiente ${ambienteSom} tocando`);
+            console.log(`✅ Som ambiente ${ambienteSom} tocando (máximo ${maxPlays} vezes)`);
           })
           .catch(e => {
             console.warn(`⚠️ Não foi possível tocar ${ambienteSom}:`, e.message);
@@ -714,28 +742,46 @@ class InterviewSystem {
       'biologo': 'arnaldo_intro.mp3',
       'fazendeiro': 'valdemar_intro.mp3',
       'lider_indigena': 'yakamu_intro.mp3',
-      'deputado': 'venturi_confissao.mp3'
+      'podcaster': 'falcao_intro.mp3',
+      'coronel': 'coronel_intro.mp3',
+      'politico': 'venturi_confissao.mp3'
     };
     
     const audioFile = audioMap[entity.id];
-    if (!audioFile) return;
+    if (!audioFile) {
+      console.log(`⚠️ Nenhum áudio de introdução mapeado para ${entity.id}`);
+      return;
+    }
     
-    const audioContainer = document.createElement('div');
-    audioContainer.className = 'chat-message system-message audio-intro-message';
-    audioContainer.innerHTML = `
-      <div class="audio-intro-box">
-        <div class="audio-intro-header">
-          <span class="audio-icon">🎙️</span>
-          <span class="audio-title">Introdução - ${entity.nome}</span>
+    // Verificar se o arquivo existe antes de tentar adicionar
+    const audioPath = `/static/audio/${audioFile}`;
+    const testAudio = new Audio(audioPath);
+    
+    testAudio.addEventListener('error', () => {
+      console.log(`⚠️ Áudio de introdução não disponível para ${entity.nome}`);
+      // Não mostrar nada se o áudio não existir
+    });
+    
+    testAudio.addEventListener('canplaythrough', () => {
+      // Áudio existe, adicionar player ao chat
+      const audioContainer = document.createElement('div');
+      audioContainer.className = 'chat-message system-message audio-intro-message';
+      audioContainer.innerHTML = `
+        <div class="audio-intro-box">
+          <div class="audio-intro-header">
+            <span class="audio-icon">🎙️</span>
+            <span class="audio-title">Introdução - ${entity.nome}</span>
+          </div>
+          <audio controls class="entity-audio">
+            <source src="${audioPath}" type="audio/mpeg">
+            Seu navegador não suporta o elemento de áudio.
+          </audio>
         </div>
-        <audio controls class="entity-audio">
-          <source src="/static/audio/${audioFile}" type="audio/mpeg">
-          Seu navegador não suporta o elemento de áudio.
-        </audio>
-      </div>
-    `;
-    
-    this.chatLog.appendChild(audioContainer);
+      `;
+      
+      this.chatLog.appendChild(audioContainer);
+      console.log(`✅ Player de áudio adicionado para ${entity.nome}`);
+    }, { once: true });
   }
 
   showQuestionSuggestions(entity) {
@@ -1073,9 +1119,10 @@ class InterviewSystem {
               <h3>🔗 Conexões com outras pistas:</h3>
               <div class="conexoes-lista">
                 ${pistaInfo.conexoes.map(conexao => {
-                  const tem = data.pistas[conexao];
-                  return `<span class="conexao-badge ${tem ? 'coletada' : 'nao-coletada'}">
-                    ${tem ? '✅' : '🔒'} ${conexao.replace(/_/g, ' ')}
+                  const pistaConectada = data.pistas[conexao];
+                  const coletada = pistaConectada && pistaConectada.coletada;
+                  return `<span class="conexao-badge ${coletada ? 'coletada' : 'nao-coletada'}">
+                    ${coletada ? '✅' : '🔒'} ${conexao.replace(/_/g, ' ')}
                   </span>`;
                 }).join('')}
               </div>
