@@ -8,8 +8,8 @@ python-dotenv==1.2.1
 # OpenAI API
 openai==2.7.2
 
-# Database (removido psycopg2 - usando SQLite)
-# psycopg2-binary>=2.9.9  # Não necessário - projeto usa SQLite
+# Database
+psycopg2-binary==2.9.9
 
 # WSGI Server
 gunicorn==23.0.0

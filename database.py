@@ -13,14 +13,22 @@ from typing import List, Dict, Optional
 DATABASE_URL = os.getenv('DATABASE_URL')
 USE_POSTGRES = DATABASE_URL is not None
 
-if USE_POSTGRES:
-    import psycopg2
-    import psycopg2.extras
-    # Render usa postgres://, mas psycopg2 precisa de postgresql://
-    if DATABASE_URL.startswith('postgres://'):
-        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-else:
+# Importar módulos condicionalmente
+try:
+    if USE_POSTGRES:
+        import psycopg2
+        import psycopg2.extras
+        # Render usa postgres://, mas psycopg2 precisa de postgresql://
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    else:
+        import sqlite3
+except ImportError as e:
+    print(f"⚠️  Erro ao importar módulo de banco: {e}")
+    print(f"💡 Instalando dependência necessária...")
     import sqlite3
+    USE_POSTGRES = False
+    DATABASE_URL = None
 
 class GameDatabase:
     def __init__(self, db_path='game_data.db'):
